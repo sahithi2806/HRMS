@@ -1,0 +1,27 @@
+# .NET / C# ignores
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Storage uploaded files
+backend/HrmsApi/Storage/Documents/*
+!backend/HrmsApi/Storage/Documents/.gitkeep
+
+# Node / React ignores
+node_modules/
+dist/
+.vite/
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / Editor ignores
+.DS_Store
+Thumbs.db
