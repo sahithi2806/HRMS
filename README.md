@@ -59,12 +59,13 @@ Sample- HRMS/
 │   │   ├── SQL/                  # Idempotent database migration & seed SQL scripts
 │   │   │   ├── 01_CreateSchema.sql
 │   │   │   ├── 02_SeedData.sql
-│   │   │   └── 03_Hardening.sql  # Schema hardening, persisted computed columns, audit columns
-│   │   ├── Storage/              # Secure local document upload directory
-│   │   ├── appsettings.json      # Connection strings & configuration (placeholders for secrets)
-│   │   └── Program.cs            # Dependency injection, rate limiting, JWT validation & pipeline
+│   │   │   ├── 03_Hardening.sql    # Schema hardening, persisted computed columns, audit columns
+│   │   │   └── 04_Attendance.sql   # Attendance & regularization tables, unique work-date indexes
+│   │   ├── Storage/                # Secure local document upload directory
+│   │   ├── appsettings.json        # Connection strings & configuration (placeholders for secrets)
+│   │   └── Program.cs              # Dependency injection, rate limiting, JWT validation & pipeline
 │   │
-│   └── HrmsApi.Tests/            # xUnit + Moq unit test suite (49 tests)
+│   └── HrmsApi.Tests/              # xUnit + Moq unit test suite (72 tests)
 │
 ├── frontend/
 │   └── src/

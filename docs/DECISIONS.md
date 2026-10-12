@@ -14,6 +14,13 @@ This document records architectural, engineering, and design decisions made whil
 - **Computed RemainingLeaves**: Replaced mutable `RemainingLeaves` column with persisted computed column `(TotalLeaves - UsedLeaves)` in `03_Hardening.sql` and updated repository write queries.
 - **Rate Limiting**: Added ASP.NET Core built-in fixed-window rate limiter (5 requests / minute per remote IP) targeting `/api/auth/login`.
 
+### v7 — Employee Portal + Attendance
+- **Timezone Normalization**: Timezone resolved dynamically from config `Attendance:TimeZone` (default `Asia/Kolkata`) with dual support for IANA and Windows TZ IDs (`India Standard Time`).
+- **Pure Attendance Calculation**: `AttendanceCalculator` encapsulates shift start (09:30), grace limit (15m -> 09:45), working hours status tiers (>=8h Present, >=4h HalfDay, <4h Absent), derived day status (`MissingCheckOut` on past unpunched days, `OnLeave`, `Weekend`), and 7-day regularization window.
+- **Atomic Regularization Overwrites**: Approved regularizations atomically update request status and upsert the corresponding `Attendance` record with `Source = 'Regularized'`.
+- **Portal Summary Aggregation**: `IPortalRepository` composes profile, manager hierarchy, leave availability, current day punch widget, upcoming approved leave, and pending approval inbox counts.
+- **Default Landing Page**: `/portal` configured as default destination for authenticated users across all roles, with interactive clock-in/out widget and leave progress metrics.
+
 ## Future Scope (Deferred)
 - Goals and OKR tracking.
 - Payroll generation and tax deductions.

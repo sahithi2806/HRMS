@@ -9,6 +9,8 @@ import { EmployeesPage } from './pages/EmployeesPage';
 import { DocumentsPage } from './pages/DocumentsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LeavePage } from './pages/LeavePage';
+import { PortalPage } from './pages/PortalPage';
+import { AttendancePage } from './pages/AttendancePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const AppLayout = ({ children }) => {
@@ -24,12 +26,11 @@ const AppLayout = ({ children }) => {
 };
 
 export const App = () => {
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const getDefaultRedirect = () => {
     if (!isAuthenticated) return '/login';
-    if (role?.toLowerCase() === 'employee') return '/profile';
-    return '/employees';
+    return '/portal';
   };
 
   return (
@@ -38,6 +39,30 @@ export const App = () => {
       <Route
         path="/login"
         element={isAuthenticated ? <Navigate to={getDefaultRedirect()} replace /> : <LoginPage />}
+      />
+
+      {/* Portal (Default Landing Page) */}
+      <Route
+        path="/portal"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <PortalPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Attendance & Time Tracking */}
+      <Route
+        path="/attendance"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <AttendancePage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
       />
 
       {/* Protected Routes inside AppLayout */}

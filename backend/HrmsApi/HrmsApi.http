@@ -127,3 +127,56 @@ Content-Type: application/json
   "status": "Inactive",
   "exitReason": "Attempt to deactivate last admin"
 }
+
+### 15. Employee Portal Summary
+GET {{HrmsApi_HostAddress}}/api/portal/summary
+Authorization: Bearer {{employeeToken}}
+
+### 16. Today's Attendance State
+GET {{HrmsApi_HostAddress}}/api/attendance/today
+Authorization: Bearer {{employeeToken}}
+
+### 17. Perform Web Check-In
+POST {{HrmsApi_HostAddress}}/api/attendance/check-in
+Authorization: Bearer {{employeeToken}}
+
+### 18. Perform Web Check-Out
+POST {{HrmsApi_HostAddress}}/api/attendance/check-out
+Authorization: Bearer {{employeeToken}}
+
+### 19. My Monthly Attendance Calendar
+GET {{HrmsApi_HostAddress}}/api/attendance/my?month=2026-10
+Authorization: Bearer {{employeeToken}}
+
+### 20. Team Daily Attendance (Manager / Admin)
+GET {{HrmsApi_HostAddress}}/api/attendance/team?date=2026-10-09
+Authorization: Bearer {{managerToken}}
+
+### 21. Request Attendance Regularization
+POST {{HrmsApi_HostAddress}}/api/attendance/regularizations
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "workDate": "2026-10-08",
+  "requestedCheckIn": "2026-10-08T09:30:00",
+  "requestedCheckOut": "2026-10-08T18:30:00",
+  "reason": "Biometric terminal network failure"
+}
+
+### 22. Get Regularizations List
+GET {{HrmsApi_HostAddress}}/api/attendance/regularizations
+Authorization: Bearer {{employeeToken}}
+
+### 23. Approve Regularization (Manager)
+PUT {{HrmsApi_HostAddress}}/api/attendance/regularizations/2/approve
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "comment": "Approved after biometric cross-check"
+}
+
+### 24. Leave Calendar View (Manager / Admin)
+GET {{HrmsApi_HostAddress}}/api/leave/calendar?month=2026-10
+Authorization: Bearer {{managerToken}}

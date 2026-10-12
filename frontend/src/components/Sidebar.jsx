@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Users, FileText, User, Calendar, LogOut, Shield, Briefcase, UserCheck } from 'lucide-react';
+import { Users, FileText, User, Calendar, LogOut, Shield, Briefcase, UserCheck, Clock } from 'lucide-react';
 
 export const Sidebar = () => {
   const { user, role, isAdmin, isManager, logout } = useAuth();
@@ -28,6 +28,24 @@ export const Sidebar = () => {
       </div>
 
       <nav className="sidebar-nav">
+        {/* Employee Portal (Home) */}
+        <NavLink
+          to="/portal"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Briefcase size={18} />
+          <span>My Portal</span>
+        </NavLink>
+
+        {/* Attendance & Time Tracking */}
+        <NavLink
+          to="/attendance"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Clock size={18} />
+          <span>Attendance</span>
+        </NavLink>
+
         {/* Admin and Manager see Employee Directory */}
         {(isAdmin || isManager) && (
           <NavLink

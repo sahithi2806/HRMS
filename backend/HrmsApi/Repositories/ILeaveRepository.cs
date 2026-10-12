@@ -16,4 +16,5 @@ public interface ILeaveRepository
     Task<bool> HasOverlappingLeaveAsync(int employeeId, DateTime startDate, DateTime endDate, int? excludeLeaveId = null);
     Task<bool> ApproveLeaveTransactionAsync(int leaveId, int employeeId, int approverEmployeeId, int daysToDeduct, string? comment = null);
     Task<bool> RejectLeaveRequestAsync(int leaveId, int approverEmployeeId, string? comment = null);
+    Task<IEnumerable<LeaveRequestResponseDto>> GetLeaveCalendarAsync(string startMonth, string endMonth, int? managerEmployeeId = null);
 }

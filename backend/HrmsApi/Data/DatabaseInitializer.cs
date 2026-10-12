@@ -86,6 +86,36 @@ public static class DatabaseInitializer
                 FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID),
                 FOREIGN KEY (ApprovedBy) REFERENCES Employees(EmployeeID)
             );
+
+            CREATE TABLE IF NOT EXISTS Attendance (
+                AttendanceID INTEGER PRIMARY KEY AUTOINCREMENT,
+                EmployeeID INTEGER NOT NULL,
+                WorkDate TEXT NOT NULL,
+                CheckInAt TEXT NOT NULL,
+                CheckOutAt TEXT NULL,
+                IsLate INTEGER NOT NULL DEFAULT 0,
+                Status TEXT NULL CHECK (Status IN ('Present', 'HalfDay', 'Absent')),
+                Source TEXT NOT NULL DEFAULT 'Self' CHECK (Source IN ('Self', 'Regularized')),
+                CreatedAt TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+                UNIQUE (EmployeeID, WorkDate),
+                FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID)
+            );
+
+            CREATE TABLE IF NOT EXISTS AttendanceRegularizations (
+                RegularizationID INTEGER PRIMARY KEY AUTOINCREMENT,
+                EmployeeID INTEGER NOT NULL,
+                WorkDate TEXT NOT NULL,
+                RequestedCheckIn TEXT NOT NULL,
+                RequestedCheckOut TEXT NOT NULL,
+                Reason TEXT NOT NULL,
+                Status TEXT NOT NULL DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Approved', 'Rejected', 'Cancelled')),
+                ApprovedBy INTEGER NULL,
+                ApprovedAt TEXT NULL,
+                ManagerComment TEXT NULL,
+                CreatedAt TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+                FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID),
+                FOREIGN KEY (ApprovedBy) REFERENCES Employees(EmployeeID)
+            );
             """;
 
         connection.Execute(schemaSql);
@@ -294,5 +324,26 @@ public static class DatabaseInitializer
             (5, '2026 Festival Holiday Calendar & Leave Rules', 'HR Policies', '{pdf5.Replace(@"\", @"\\")}', 1, '2026-02-10 16:20:00', 1);
             """;
         connection.Execute(seedDocsSql);
+
+        // 8. Seed Attendance and Regularization for current month
+        const string seedAttendanceSql = """
+            INSERT OR IGNORE INTO Attendance (AttendanceID, EmployeeID, WorkDate, CheckInAt, CheckOutAt, IsLate, Status, Source, CreatedAt) VALUES
+            (1, 8, '2026-10-01', '2026-10-01 09:15:00', '2026-10-01 18:30:00', 0, 'Present', 'Self', '2026-10-01 09:15:00'),
+            (2, 8, '2026-10-02', '2026-10-02 09:20:00', '2026-10-02 18:15:00', 0, 'Present', 'Self', '2026-10-02 09:20:00'),
+            (3, 8, '2026-10-05', '2026-10-05 10:05:00', '2026-10-05 19:15:00', 1, 'Present', 'Self', '2026-10-05 10:05:00'),
+            (4, 8, '2026-10-06', '2026-10-06 09:25:00', '2026-10-06 14:00:00', 0, 'HalfDay', 'Self', '2026-10-06 09:25:00'),
+            (5, 8, '2026-10-07', '2026-10-07 09:10:00', '2026-10-07 18:45:00', 0, 'Present', 'Self', '2026-10-07 09:10:00'),
+            (6, 8, '2026-10-08', '2026-10-08 09:30:00', '2026-10-08 18:30:00', 0, 'Present', 'Regularized', '2026-10-08 09:30:00'),
+            (7, 8, '2026-10-09', '2026-10-09 09:15:00', '2026-10-09 18:20:00', 0, 'Present', 'Self', '2026-10-09 09:15:00'),
+            -- Other engineering team members for Vikramaditya's team view on 2026-10-09
+            (8, 9, '2026-10-09', '2026-10-09 09:20:00', '2026-10-09 18:30:00', 0, 'Present', 'Self', '2026-10-09 09:20:00'),
+            (9, 10, '2026-10-09', '2026-10-09 10:10:00', '2026-10-09 19:00:00', 1, 'Present', 'Self', '2026-10-09 10:10:00'),
+            (10, 11, '2026-10-09', '2026-10-09 09:10:00', '2026-10-09 18:15:00', 0, 'Present', 'Self', '2026-10-09 09:10:00');
+
+            INSERT OR IGNORE INTO AttendanceRegularizations (RegularizationID, EmployeeID, WorkDate, RequestedCheckIn, RequestedCheckOut, Reason, Status, ApprovedBy, ApprovedAt, ManagerComment, CreatedAt) VALUES
+            (1, 8, '2026-10-08', '2026-10-08 09:30:00', '2026-10-08 18:30:00', 'Biometric scanner glitch at main turnstile', 'Approved', 2, '2026-10-08 19:00:00', 'Verified with front desk register', '2026-10-08 18:35:00'),
+            (2, 9, '2026-10-07', '2026-10-07 09:30:00', '2026-10-07 18:30:00', 'Worked from client site in Whitefield, biometric punch missed', 'Pending', NULL, NULL, NULL, '2026-10-08 10:00:00');
+            """;
+        connection.Execute(seedAttendanceSql);
     }
 }

@@ -184,4 +184,29 @@ public class LeaveService : ILeaveService
         var approverId = managerEmployeeId!.Value;
         return await _leaveRepository.RejectLeaveRequestAsync(leaveId, approverId, comment);
     }
+
+    public async Task<IEnumerable<LeaveRequestResponseDto>> GetLeaveCalendarAsync(string userRole, int? currentEmployeeId, string? month = null)
+    {
+        if (userRole != "Admin" && userRole != "Manager")
+        {
+            throw new UnauthorizedAccessException("Only Managers and Admins can view the leave calendar.");
+        }
+
+        // Determine month range
+        DateTime targetMonth;
+        if (!string.IsNullOrWhiteSpace(month) && DateTime.TryParseExact(month, "yyyy-MM", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsed))
+        {
+            targetMonth = parsed;
+        }
+        else
+        {
+            targetMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        }
+
+        var startOfMonth = new DateTime(targetMonth.Year, targetMonth.Month, 1).ToString("yyyy-MM-dd");
+        var endOfMonth = new DateTime(targetMonth.Year, targetMonth.Month, DateTime.DaysInMonth(targetMonth.Year, targetMonth.Month)).ToString("yyyy-MM-dd");
+
+        int? managerFilter = userRole == "Manager" ? currentEmployeeId : null;
+        return await _leaveRepository.GetLeaveCalendarAsync(startOfMonth, endOfMonth, managerFilter);
+    }
 }

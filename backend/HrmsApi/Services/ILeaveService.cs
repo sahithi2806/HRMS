@@ -9,4 +9,5 @@ public interface ILeaveService
     Task<LeaveRequestResponseDto> SubmitLeaveRequestAsync(int? currentEmployeeId, CreateLeaveRequestDto dto);
     Task<bool> ApproveLeaveAsync(int leaveId, string userRole, int? managerEmployeeId, string? comment = null);
     Task<bool> RejectLeaveAsync(int leaveId, string userRole, int? managerEmployeeId, string? comment = null);
+    Task<IEnumerable<LeaveRequestResponseDto>> GetLeaveCalendarAsync(string userRole, int? currentEmployeeId, string? month = null);
 }

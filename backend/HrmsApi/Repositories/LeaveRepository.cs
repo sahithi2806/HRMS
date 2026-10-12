@@ -353,4 +353,45 @@ public class LeaveRepository : ILeaveRepository
 
         return affected > 0;
     }
+
+    public async Task<IEnumerable<LeaveRequestResponseDto>> GetLeaveCalendarAsync(string startMonth, string endMonth, int? managerEmployeeId = null)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var managerFilter = managerEmployeeId.HasValue ? "AND e.ManagerID = @ManagerID" : "";
+        var sql = $"""
+            SELECT 
+                lr.LeaveID,
+                lr.EmployeeID,
+                u.Name AS EmployeeName,
+                e.Department,
+                lr.LeaveType,
+                lr.StartDate,
+                lr.EndDate,
+                COALESCE(lr.Days, {TotalDaysSql}) AS Days,
+                lr.Reason,
+                lr.Status,
+                lr.ApprovedBy,
+                apprU.Name AS ApproverName,
+                lr.ApprovedAt,
+                lr.ManagerComment,
+                lr.CreatedAt
+            FROM LeaveRequests lr
+            INNER JOIN Employees e ON lr.EmployeeID = e.EmployeeID
+            INNER JOIN Users u ON e.UserID = u.UserID
+            LEFT JOIN Employees apprE ON lr.ApprovedBy = apprE.EmployeeID
+            LEFT JOIN Users apprU ON apprE.UserID = apprU.UserID
+            WHERE lr.Status = 'Approved'
+              AND lr.StartDate <= @EndDate
+              AND lr.EndDate >= @StartDate
+              {managerFilter}
+            ORDER BY lr.StartDate ASC, u.Name ASC;
+            """;
+
+        return await connection.QueryAsync<LeaveRequestResponseDto>(sql, new
+        {
+            StartDate = startMonth,
+            EndDate = endMonth,
+            ManagerID = managerEmployeeId
+        });
+    }
 }

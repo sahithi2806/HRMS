@@ -38,6 +38,15 @@ public class LeaveController : ControllerBase
         return Ok(requests);
     }
 
+    [HttpGet("calendar")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> GetLeaveCalendar([FromQuery] string? month = null)
+    {
+        var ctx = GetUserContext();
+        var leaves = await _leaveService.GetLeaveCalendarAsync(ctx.Role, ctx.EmployeeId, month);
+        return Ok(leaves);
+    }
+
     [HttpGet("balance")]
     public async Task<IActionResult> GetLeaveBalance()
     {

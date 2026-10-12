@@ -36,12 +36,18 @@ builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<ILeaveRepository, LeaveRepository>();
+builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+builder.Services.AddScoped<IAttendanceRegularizationRepository, AttendanceRegularizationRepository>();
+builder.Services.AddScoped<IPortalRepository, PortalRepository>();
 
 // 5. Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ILeaveService, LeaveService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+builder.Services.AddScoped<IAttendanceRegularizationService, AttendanceRegularizationService>();
+builder.Services.AddScoped<IPortalService, PortalService>();
 
 // 6. Fail-fast JWT Secret Key Validation & Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
