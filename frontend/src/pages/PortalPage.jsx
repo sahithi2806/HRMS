@@ -5,7 +5,7 @@ import { portalService } from '../services/portalService';
 import { attendanceService } from '../services/attendanceService';
 import { 
   Clock, Calendar, CheckCircle2, AlertCircle, ArrowRight,
-  TrendingUp, Shield, Users, Briefcase, Sparkles
+  TrendingUp, Shield, Users, Briefcase, Sparkles, Laptop, HelpCircle
 } from 'lucide-react';
 
 export const PortalPage = () => {
@@ -557,6 +557,82 @@ export const PortalPage = () => {
             }}
           >
             Explore
+          </button>
+        </div>
+
+        {/* My Assets Card */}
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: '14px',
+          padding: '20px 24px',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#F0F9FF', color: '#0284C7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Laptop size={22} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 2px 0', color: '#0F172A' }}>My Hardware</h3>
+              <span style={{ fontSize: '0.8rem', color: '#64748B' }}>{summary?.MyAssetsCount ?? 0} assigned devices</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate('/my-assets')}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              border: '1px solid #E2E8F0',
+              background: '#F8FAFC',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              color: '#0284C7',
+              cursor: 'pointer'
+            }}
+          >
+            View
+          </button>
+        </div>
+
+        {/* Helpdesk Support Card */}
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: '14px',
+          padding: '20px 24px',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#FAF5FF', color: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <HelpCircle size={22} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 2px 0', color: '#0F172A' }}>Helpdesk Support</h3>
+              <span style={{ fontSize: '0.8rem', color: '#64748B' }}>IT, HR & facilities tickets</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate('/helpdesk')}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              border: '1px solid #E2E8F0',
+              background: '#F8FAFC',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              color: '#9333EA',
+              cursor: 'pointer'
+            }}
+          >
+            Support
           </button>
         </div>
 

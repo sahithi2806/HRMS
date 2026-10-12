@@ -180,3 +180,62 @@ Content-Type: application/json
 ### 24. Leave Calendar View (Manager / Admin)
 GET {{HrmsApi_HostAddress}}/api/leave/calendar?month=2026-10
 Authorization: Bearer {{managerToken}}
+
+### 25. List All Assets (Admin)
+GET {{HrmsApi_HostAddress}}/api/assets
+Authorization: Bearer {{adminToken}}
+
+### 26. Create New Asset (Admin)
+POST {{HrmsApi_HostAddress}}/api/assets
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "assetTag": "AST-2026-099",
+  "name": "MacBook Pro 16 M3 Max",
+  "category": "Laptop",
+  "serialNumber": "C02XYZ123456",
+  "purchaseDate": "2026-02-15"
+}
+
+### 27. Assign Asset to Employee (Admin)
+POST {{HrmsApi_HostAddress}}/api/assets/1/assign
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "employeeID": 3
+}
+
+### 28. Get My Assigned Assets (Employee)
+GET {{HrmsApi_HostAddress}}/api/assets/mine
+Authorization: Bearer {{employeeToken}}
+
+### 29. Raise Asset Repair Request (Employee)
+POST {{HrmsApi_HostAddress}}/api/assets/requests
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "assetID": 1,
+  "requestType": "Repair",
+  "description": "Battery drains rapidly and keyboard key sticking"
+}
+
+### 30. Get Asset Requests (Admin / Employee)
+GET {{HrmsApi_HostAddress}}/api/assets/requests
+Authorization: Bearer {{adminToken}}
+
+### 31. Approve Asset Request (Admin)
+PUT {{HrmsApi_HostAddress}}/api/assets/requests/1/approve
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "comment": "Approved for vendor maintenance"
+}
+
+### 32. Unassign Asset (Admin)
+POST {{HrmsApi_HostAddress}}/api/assets/1/unassign
+Authorization: Bearer {{adminToken}}
+

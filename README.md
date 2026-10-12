@@ -60,12 +60,14 @@ Sample- HRMS/
 │   │   │   ├── 01_CreateSchema.sql
 │   │   │   ├── 02_SeedData.sql
 │   │   │   ├── 03_Hardening.sql    # Schema hardening, persisted computed columns, audit columns
-│   │   │   └── 04_Attendance.sql   # Attendance & regularization tables, unique work-date indexes
+│   │   │   ├── 04_Attendance.sql   # Attendance & regularization tables, unique work-date indexes
+│   │   │   └── 05_Assets.sql       # Assets, assignments (filtered unique index), asset requests
 │   │   ├── Storage/                # Secure local document upload directory
 │   │   ├── appsettings.json        # Connection strings & configuration (placeholders for secrets)
 │   │   └── Program.cs              # Dependency injection, rate limiting, JWT validation & pipeline
 │   │
-│   └── HrmsApi.Tests/              # xUnit + Moq unit test suite (72 tests)
+│   ├── HrmsApi.Tests/              # xUnit + Moq unit test suite (77 tests)
+│   └── HrmsApi.IntegrationTests/   # WebApplicationFactory integration tests (2 tests)
 │
 ├── frontend/
 │   └── src/
@@ -209,3 +211,38 @@ npm run build
    - Login endpoint throttles brute force attacks to **5 requests/minute/IP** (returns 429 Too Many Requests).
    - Security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`, `Referrer-Policy: strict-origin-when-cross-origin`.
    - Outside Development, automatic HTTPS redirection and HSTS are enforced.
+
+---
+
+## ⏰ Employee Portal & Attendance (v7)
+
+1. **Employee Portal (ESS):**
+   - Profile summary with department, position, and manager hierarchy.
+   - Interactive attendance punch widget with live clock and shift indicators.
+   - Leave balance breakdown (`Total`, `Used`, `Pending`, `Available`).
+   - Upcoming approved leaves and quick action shortcut tiles.
+
+2. **Attendance Management:**
+   - Single check-in and check-out per workday normalized to company timezone (`Asia/Kolkata`).
+   - Late arrival detection based on shift start (09:30 AM) + grace window (15 mins).
+   - Working hours tiers: $\ge 8\text{h}$ Present, $\ge 4\text{h}$ HalfDay, $< 4\text{h}$ Absent.
+   - Monthly attendance calendar view with derived statuses (`MissingCheckOut`, `OnLeave`, `Weekend`).
+   - Attendance regularization within 7 days, approved atomically by reporting managers.
+
+---
+
+## 💻 Asset Management & Integration Testing (v8)
+
+1. **Filtered Unique Index:**
+   - `CREATE UNIQUE INDEX UQ_Asset_OpenAssignment ON AssetAssignments (AssetID) WHERE ReturnedAt IS NULL` enforces that any hardware asset can have at most one active employee assignment.
+   - Concurrency or duplicate assignments throw HTTP 409 Conflict at the database level.
+
+2. **Lifecycle Management:**
+   - Admin manages inventory across categories (`Laptop`, `Mobile`, `Monitor`, `Accessory`, `Other`) and statuses (`Available`, `Assigned`, `UnderRepair`, `Retired`).
+   - Employees view assigned devices (`/my-assets`), submit `Repair` or `Return` requests, and track request status.
+   - Admin reviews requests: approving a `Return` marks the asset `Available` and closes the assignment; approving a `Repair` sets asset status to `UnderRepair`.
+
+3. **Integration Test Suite (`HrmsApi.IntegrationTests`):**
+   - End-to-end integration tests using `Microsoft.AspNetCore.Mvc.Testing` against isolated test database.
+   - Validates double assignment prevention on open assignments via database index.
+   - Validates concurrent leave approval race conditions (exactly one approval succeeds).

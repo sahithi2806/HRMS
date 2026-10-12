@@ -140,7 +140,15 @@ public class PortalRepository : IPortalRepository
               """;
         summary.NextLeave = await connection.QuerySingleOrDefaultAsync<NextLeaveDto>(nextLeaveSql, new { EmployeeID = employeeId, WorkDate = workDate });
 
-        // 5. Pending Approvals Count (for Manager / Admin)
+        // 5. My Assets Count
+        const string myAssetsSql = """
+            SELECT COUNT(1)
+            FROM AssetAssignments
+            WHERE EmployeeID = @EmployeeID AND ReturnedAt IS NULL;
+            """;
+        summary.MyAssetsCount = await connection.ExecuteScalarAsync<int>(myAssetsSql, new { EmployeeID = employeeId });
+
+        // 6. Pending Approvals Count (for Manager / Admin)
         if (role == "Manager")
         {
             const string pendingLeavesSql = """
@@ -179,7 +187,14 @@ public class PortalRepository : IPortalRepository
                 """;
             var pendingRegs = await connection.ExecuteScalarAsync<int>(pendingRegsSql, new { EmployeeID = employeeId });
 
-            summary.PendingApprovalsCount = pendingLeaves + pendingRegs;
+            const string pendingAssetReqsSql = """
+                SELECT COUNT(1)
+                FROM AssetRequests
+                WHERE Status = 'Pending';
+                """;
+            var pendingAssetReqs = await connection.ExecuteScalarAsync<int>(pendingAssetReqsSql);
+
+            summary.PendingApprovalsCount = pendingLeaves + pendingRegs + pendingAssetReqs;
         }
 
         return summary;

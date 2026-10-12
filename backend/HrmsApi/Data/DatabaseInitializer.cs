@@ -116,6 +116,49 @@ public static class DatabaseInitializer
                 FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID),
                 FOREIGN KEY (ApprovedBy) REFERENCES Employees(EmployeeID)
             );
+
+            CREATE TABLE IF NOT EXISTS Assets (
+                AssetID INTEGER PRIMARY KEY AUTOINCREMENT,
+                AssetTag TEXT NOT NULL UNIQUE,
+                Name TEXT NOT NULL,
+                Category TEXT NOT NULL CHECK (Category IN ('Laptop', 'Mobile', 'Monitor', 'Accessory', 'Other')),
+                SerialNumber TEXT NULL,
+                PurchaseDate TEXT NULL,
+                Status TEXT NOT NULL DEFAULT 'Available' CHECK (Status IN ('Available', 'Assigned', 'UnderRepair', 'Retired')),
+                CreatedAt TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+            );
+
+            CREATE TABLE IF NOT EXISTS AssetAssignments (
+                AssignmentID INTEGER PRIMARY KEY AUTOINCREMENT,
+                AssetID INTEGER NOT NULL,
+                EmployeeID INTEGER NOT NULL,
+                AssignedAt TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+                AssignedBy INTEGER NOT NULL,
+                ReturnedAt TEXT NULL,
+                FOREIGN KEY (AssetID) REFERENCES Assets(AssetID),
+                FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID),
+                FOREIGN KEY (AssignedBy) REFERENCES Employees(EmployeeID)
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS UQ_Asset_OpenAssignment 
+            ON AssetAssignments (AssetID) 
+            WHERE ReturnedAt IS NULL;
+
+            CREATE TABLE IF NOT EXISTS AssetRequests (
+                AssetRequestID INTEGER PRIMARY KEY AUTOINCREMENT,
+                AssetID INTEGER NOT NULL,
+                EmployeeID INTEGER NOT NULL,
+                RequestType TEXT NOT NULL CHECK (RequestType IN ('Repair', 'Return')),
+                Description TEXT NOT NULL,
+                Status TEXT NOT NULL DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Approved', 'Rejected', 'Cancelled')),
+                ReviewedBy INTEGER NULL,
+                ReviewedAt TEXT NULL,
+                AdminComment TEXT NULL,
+                CreatedAt TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+                FOREIGN KEY (AssetID) REFERENCES Assets(AssetID),
+                FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID),
+                FOREIGN KEY (ReviewedBy) REFERENCES Employees(EmployeeID)
+            );
             """;
 
         connection.Execute(schemaSql);
@@ -345,5 +388,31 @@ public static class DatabaseInitializer
             (2, 9, '2026-10-07', '2026-10-07 09:30:00', '2026-10-07 18:30:00', 'Worked from client site in Whitefield, biometric punch missed', 'Pending', NULL, NULL, NULL, '2026-10-08 10:00:00');
             """;
         connection.Execute(seedAttendanceSql);
+
+        // 9. Seed Assets, Assignments, and Requests
+        const string seedAssetsSql = """
+            INSERT OR IGNORE INTO Assets (AssetID, AssetTag, Name, Category, SerialNumber, PurchaseDate, Status, CreatedAt) VALUES
+            (1, 'AST-LP-001', 'MacBook Pro 16" M3 Max', 'Laptop', 'C02G10JPMD6M', '2024-01-15', 'Assigned', '2024-01-15 10:00:00'),
+            (2, 'AST-LP-002', 'Dell XPS 15 9530', 'Laptop', 'DLXPS9530A12', '2024-02-01', 'Assigned', '2024-02-01 10:00:00'),
+            (3, 'AST-MN-001', 'Dell UltraSharp 27" 4K Monitor', 'Monitor', 'U2723QE88219', '2024-02-10', 'Assigned', '2024-02-10 11:00:00'),
+            (4, 'AST-LP-003', 'Lenovo ThinkPad X1 Carbon Gen 11', 'Laptop', 'PF49B11XCARBON', '2024-03-01', 'Available', '2024-03-01 09:00:00'),
+            (5, 'AST-MB-001', 'iPhone 15 Pro (Test Device)', 'Mobile', 'F17M8821TEST', '2024-03-15', 'Available', '2024-03-15 14:00:00'),
+            (6, 'AST-MN-002', 'LG 34" UltraWide Curved Monitor', 'Monitor', 'LG34WN80C991', '2024-04-01', 'UnderRepair', '2024-04-01 12:00:00'),
+            (7, 'AST-AC-001', 'Logitech MX Master 3S + Keys Combo', 'Accessory', 'MXM3S881920', '2024-04-10', 'Assigned', '2024-04-10 15:00:00');
+
+            -- Asset 1 assigned to Saha Reddy (Employee 8)
+            -- Asset 2 assigned to Vikramaditya Verma (Employee 2)
+            -- Asset 3 assigned to Saha Reddy (Employee 8)
+            -- Asset 7 assigned to Saha Reddy (Employee 8)
+            INSERT OR IGNORE INTO AssetAssignments (AssignmentID, AssetID, EmployeeID, AssignedAt, AssignedBy, ReturnedAt) VALUES
+            (1, 1, 8, '2024-01-16 10:00:00', 1, NULL),
+            (2, 2, 2, '2024-02-02 11:00:00', 1, NULL),
+            (3, 3, 8, '2024-02-11 12:00:00', 1, NULL),
+            (4, 7, 8, '2024-04-11 15:30:00', 1, NULL);
+
+            INSERT OR IGNORE INTO AssetRequests (AssetRequestID, AssetID, EmployeeID, RequestType, Description, Status, ReviewedBy, ReviewedAt, AdminComment, CreatedAt) VALUES
+            (1, 3, 8, 'Repair', 'Screen flickering on HDMI port 2 after reboot', 'Pending', NULL, NULL, NULL, '2026-10-10 14:30:00');
+            """;
+        connection.Execute(seedAssetsSql);
     }
 }

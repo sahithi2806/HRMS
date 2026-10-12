@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Users, FileText, User, Calendar, LogOut, Shield, Briefcase, UserCheck, Clock } from 'lucide-react';
+import { Users, FileText, User, Calendar, LogOut, Shield, Briefcase, UserCheck, Clock, Laptop, Package, HelpCircle } from 'lucide-react';
 
 export const Sidebar = () => {
   const { user, role, isAdmin, isManager, logout } = useAuth();
@@ -46,6 +46,33 @@ export const Sidebar = () => {
           <span>Attendance</span>
         </NavLink>
 
+        {/* Leave Management */}
+        <NavLink
+          to="/leave"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Calendar size={18} />
+          <span>Leave Management</span>
+        </NavLink>
+
+        {/* My Assets (All users) */}
+        <NavLink
+          to="/my-assets"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Laptop size={18} />
+          <span>My Assets</span>
+        </NavLink>
+
+        {/* Helpdesk (All users) */}
+        <NavLink
+          to="/helpdesk"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <HelpCircle size={18} />
+          <span>Helpdesk</span>
+        </NavLink>
+
         {/* Admin and Manager see Employee Directory */}
         {(isAdmin || isManager) && (
           <NavLink
@@ -54,6 +81,17 @@ export const Sidebar = () => {
           >
             <Users size={18} />
             <span>Employee Directory</span>
+          </NavLink>
+        )}
+
+        {/* Admin sees Asset Inventory Management */}
+        {isAdmin && (
+          <NavLink
+            to="/assets"
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+          >
+            <Package size={18} />
+            <span>Asset Inventory</span>
           </NavLink>
         )}
 
@@ -73,15 +111,6 @@ export const Sidebar = () => {
         >
           <User size={18} />
           <span>My Profile</span>
-        </NavLink>
-
-        {/* Leave Management */}
-        <NavLink
-          to="/leave"
-          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-        >
-          <Calendar size={18} />
-          <span>Leave Management</span>
         </NavLink>
       </nav>
 

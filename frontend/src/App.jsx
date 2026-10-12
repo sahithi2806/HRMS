@@ -11,6 +11,8 @@ import { ProfilePage } from './pages/ProfilePage';
 import { LeavePage } from './pages/LeavePage';
 import { PortalPage } from './pages/PortalPage';
 import { AttendancePage } from './pages/AttendancePage';
+import { AssetsPage } from './pages/AssetsPage';
+import { MyAssetsPage } from './pages/MyAssetsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const AppLayout = ({ children }) => {
@@ -94,6 +96,30 @@ export const App = () => {
           <ProtectedRoute>
             <AppLayout>
               <LeavePage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Asset Management (Admin only) */}
+      <Route
+        path="/assets"
+        element={
+          <ProtectedRoute allowedRoles={['Admin']}>
+            <AppLayout>
+              <AssetsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* My Assets (All users) */}
+      <Route
+        path="/my-assets"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <MyAssetsPage />
             </AppLayout>
           </ProtectedRoute>
         }

@@ -21,6 +21,17 @@ This document records architectural, engineering, and design decisions made whil
 - **Portal Summary Aggregation**: `IPortalRepository` composes profile, manager hierarchy, leave availability, current day punch widget, upcoming approved leave, and pending approval inbox counts.
 - **Default Landing Page**: `/portal` configured as default destination for authenticated users across all roles, with interactive clock-in/out widget and leave progress metrics.
 
+### v8 — Asset Management + Integration Testing
+- **Filtered Unique Index for Open Assignments**: Enforced single open assignment per asset using `CREATE UNIQUE INDEX IF NOT EXISTS UQ_Asset_OpenAssignment ON AssetAssignments (AssetID) WHERE ReturnedAt IS NULL`. Any concurrent or duplicate assignment directly violates database uniqueness and yields HTTP 409 Conflict.
+- **HR/Admin Role Governance**: Hardware asset inventory management, initial assignment, unassignment, and review of maintenance/return requests are restricted to `Admin` (HR operations).
+- **Employee Hardware Lifecycle Self-Service**: Employees can view their active equipment via `GET /api/assets/mine` and `/my-assets`, raise `Repair` or `Return` requests for assets currently assigned to them, and cancel their own pending requests.
+- **State Transitions on Request Review**:
+  - Approving a `Return` request atomically marks the request `Approved`, closes the active `AssetAssignment` record by setting `ReturnedAt = GETUTCDATE()`, and returns the `Asset` status to `Available`.
+  - Approving a `Repair` request atomically marks the request `Approved` and transitions the `Asset` status to `UnderRepair`.
+- **Integration Test Project**: Introduced `backend/HrmsApi.IntegrationTests` using `Microsoft.AspNetCore.Mvc.Testing` against an isolated SQLite test database with aligned authentication tokens to test real database constraints:
+  - Double assignment prevention via filtered unique index (409 Conflict).
+  - Concurrent leave approvals (simultaneous approvals result in exactly one success).
+
 ## Future Scope (Deferred)
 - Goals and OKR tracking.
 - Payroll generation and tax deductions.
