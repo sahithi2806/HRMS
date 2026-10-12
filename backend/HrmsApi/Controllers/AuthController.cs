@@ -4,6 +4,8 @@ using HrmsApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using Microsoft.AspNetCore.RateLimiting;
+
 namespace HrmsApi.Controllers;
 
 [ApiController]
@@ -19,6 +21,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("LoginRateLimit")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
         var response = await _authService.LoginAsync(request);

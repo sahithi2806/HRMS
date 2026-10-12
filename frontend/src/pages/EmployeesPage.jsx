@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Users, UserPlus, Search, Filter, Edit2, CheckCircle, 
-  XCircle, AlertCircle, X, Shield, Briefcase, DollarSign, Calendar
+  Users, UserPlus, Search, Edit2, CheckCircle, 
+  XCircle, X 
 } from 'lucide-react';
 
 export const EmployeesPage = () => {
-  const { isAdmin, isManager, user } = useAuth();
+  const { isAdmin, isManager } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -387,7 +387,7 @@ export const EmployeesPage = () => {
 
                   {isAdmin && (
                     <td style={{ fontWeight: 600 }}>
-                      ${Number(emp.salary).toLocaleString()}
+                      ₹{Number(emp.salary).toLocaleString('en-IN')}
                     </td>
                   )}
 
@@ -517,7 +517,7 @@ export const EmployeesPage = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
-                  <label className="form-label">Annual Salary ($) *</label>
+                  <label className="form-label">Annual Salary (₹) *</label>
                   <input
                     type="number"
                     min="0"
@@ -633,7 +633,7 @@ export const EmployeesPage = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Annual Salary ($)</label>
+                <label className="form-label">Annual Salary (₹)</label>
                 <input
                   type="number"
                   min="0"

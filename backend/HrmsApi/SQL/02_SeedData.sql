@@ -1,3 +1,5 @@
+
+
 -- ==========================================================
 -- HRMS SEED DATA SCRIPT
 -- Target: Microsoft SQL Server
@@ -12,26 +14,38 @@ USE HrmsDb;
 GO
 
 -- 1. Seed Users (BCrypt hashes for Admin@123, Manager@123, Employee@123)
--- Hash for Admin@123:    $2a$11$uE5tq5e2nZkWXm6N2T.B7.EfvN0U1wY2.QeQ2fG7QW1j1W7q0X9qy
--- Hash for Manager@123:  $2a$11$mO1R4x9bQf7Yc8W6T3Z.G.PqB0vW2xZ3.ReR3gH8RX2k2X8r1Y0rz
--- Hash for Employee@123: $2a$11$pQ3S6z1dSh9Ae0Y8V5b.I.RsD2xY4zB5.TgT5iJ0TZ4m4Z0t3A2tb
+-- Hash for Admin@123:    $2a$11$/N1c9972tXpqxLh74x5kEe7bWJndRfxfrOdIlBu9hhqay2egmt/bO
+-- Hash for Manager@123:  $2a$11$JKcdrN9QmoUVCDYlHMBGKOhOwrs8pwyHeaxnSFFkXDk5O3vnMbZ2C
+-- Hash for Employee@123: $2a$11$LF3glo5/GAPSDmwh4F79g.YAlWLNfVPSQjPQTozbIMlOwmsTZakNK
 
 IF NOT EXISTS (SELECT 1 FROM Users WHERE Email = 'admin@hrms.com')
 BEGIN
     INSERT INTO Users (Name, Email, PasswordHash, Role, CreatedAt)
-    VALUES ('HR Administrator', 'admin@hrms.com', '$2a$11$3hB2y2oQ2iJ7Jc4kYw2fauK3d3I4X8Q6gQ2wY0wG7o6Z4k3m9tL1K', 'Admin', GETDATE());
+    VALUES ('HR Administrator', 'admin@hrms.com', '$2a$11$/N1c9972tXpqxLh74x5kEe7bWJndRfxfrOdIlBu9hhqay2egmt/bO', 'Admin', GETDATE());
+END
+ELSE
+BEGIN
+    UPDATE Users SET PasswordHash = '$2a$11$/N1c9972tXpqxLh74x5kEe7bWJndRfxfrOdIlBu9hhqay2egmt/bO' WHERE Email = 'admin@hrms.com';
 END
 
 IF NOT EXISTS (SELECT 1 FROM Users WHERE Email = 'manager@hrms.com')
 BEGIN
     INSERT INTO Users (Name, Email, PasswordHash, Role, CreatedAt)
-    VALUES ('Alex Mercer (Manager)', 'manager@hrms.com', '$2a$11$3hB2y2oQ2iJ7Jc4kYw2fauK3d3I4X8Q6gQ2wY0wG7o6Z4k3m9tL1K', 'Manager', GETDATE());
+    VALUES ('Alex Mercer (Manager)', 'manager@hrms.com', '$2a$11$JKcdrN9QmoUVCDYlHMBGKOhOwrs8pwyHeaxnSFFkXDk5O3vnMbZ2C', 'Manager', GETDATE());
+END
+ELSE
+BEGIN
+    UPDATE Users SET PasswordHash = '$2a$11$JKcdrN9QmoUVCDYlHMBGKOhOwrs8pwyHeaxnSFFkXDk5O3vnMbZ2C' WHERE Email = 'manager@hrms.com';
 END
 
 IF NOT EXISTS (SELECT 1 FROM Users WHERE Email = 'employee@hrms.com')
 BEGIN
     INSERT INTO Users (Name, Email, PasswordHash, Role, CreatedAt)
-    VALUES ('Sarah Connor (Engineer)', 'employee@hrms.com', '$2a$11$3hB2y2oQ2iJ7Jc4kYw2fauK3d3I4X8Q6gQ2wY0wG7o6Z4k3m9tL1K', 'Employee', GETDATE());
+    VALUES ('Sarah Connor (Engineer)', 'employee@hrms.com', '$2a$11$LF3glo5/GAPSDmwh4F79g.YAlWLNfVPSQjPQTozbIMlOwmsTZakNK', 'Employee', GETDATE());
+END
+ELSE
+BEGIN
+    UPDATE Users SET PasswordHash = '$2a$11$LF3glo5/GAPSDmwh4F79g.YAlWLNfVPSQjPQTozbIMlOwmsTZakNK' WHERE Email = 'employee@hrms.com';
 END
 GO
 

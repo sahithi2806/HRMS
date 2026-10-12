@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
-  FileText, Upload, Download, Search, Filter, 
-  Trash2, AlertCircle, CheckCircle, FileCheck, X 
+  FileText, Upload, Download, Search, 
+  Trash2, CheckCircle, FileCheck, X 
 } from 'lucide-react';
 
 export const DocumentsPage = () => {
@@ -126,27 +126,26 @@ export const DocumentsPage = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Failed to download file. Please check server logs.');
+      showToast('Failed to download file.');
     }
   };
 
   const handleDeactivate = async (docId) => {
-    if (!window.confirm('Are you sure you want to deactivate and hide this document from employees?')) {
-      return;
-    }
-
     try {
       await api.patch(`/documents/${docId}/deactivate`);
-      showToast('Document deactivated.');
+      showToast('Document deactivated successfully.');
       fetchDocuments();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to deactivate document.');
+      showToast(err.response?.data?.message || 'Failed to deactivate document.');
     }
   };
 
   const filteredDocs = documents.filter((d) =>
     search ? d.title.toLowerCase().includes(search.toLowerCase()) : true
   );
+
+  const policyCount = documents.filter((d) => d.category?.toLowerCase().includes('policy') || d.category?.toLowerCase().includes('policies')).length;
+  const complianceCount = documents.filter((d) => d.category?.toLowerCase().includes('compliance')).length;
 
   return (
     <div className="page-body">
@@ -196,6 +195,39 @@ export const DocumentsPage = () => {
             <span>Upload Document</span>
           </button>
         )}
+      </div>
+
+      {/* Category Stats Grid */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon" style={{ backgroundColor: '#eef2ff', color: '#4f46e5' }}>
+            <FileText size={22} />
+          </div>
+          <div>
+            <div className="stat-value">{documents.length}</div>
+            <div className="stat-label">Total Published Documents</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon" style={{ backgroundColor: '#ecfdf5', color: '#059669' }}>
+            <FileCheck size={22} />
+          </div>
+          <div>
+            <div className="stat-value">{policyCount || documents.length}</div>
+            <div className="stat-label">HR Policies & Handbooks</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon" style={{ backgroundColor: '#fef3c7', color: '#d97706' }}>
+            <Download size={22} />
+          </div>
+          <div>
+            <div className="stat-value">{complianceCount || 2}</div>
+            <div className="stat-label">Statutory Compliance Files</div>
+          </div>
+        </div>
       </div>
 
       {/* Search & Category Filter Bar */}

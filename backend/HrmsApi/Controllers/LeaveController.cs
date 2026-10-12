@@ -60,10 +60,10 @@ public class LeaveController : ControllerBase
 
     [HttpPut("{id:int}/approve")]
     [Authorize(Roles = "Admin,Manager")]
-    public async Task<IActionResult> ApproveLeave(int id)
+    public async Task<IActionResult> ApproveLeave(int id, [FromBody] LeaveActionDto? dto = null)
     {
         var ctx = GetUserContext();
-        var success = await _leaveService.ApproveLeaveAsync(id, ctx.Role, ctx.EmployeeId);
+        var success = await _leaveService.ApproveLeaveAsync(id, ctx.Role, ctx.EmployeeId, dto?.Comment);
         if (!success)
         {
             return BadRequest(new { message = "Failed to approve leave request." });
@@ -73,10 +73,10 @@ public class LeaveController : ControllerBase
 
     [HttpPut("{id:int}/reject")]
     [Authorize(Roles = "Admin,Manager")]
-    public async Task<IActionResult> RejectLeave(int id)
+    public async Task<IActionResult> RejectLeave(int id, [FromBody] LeaveActionDto? dto = null)
     {
         var ctx = GetUserContext();
-        var success = await _leaveService.RejectLeaveAsync(id, ctx.Role, ctx.EmployeeId);
+        var success = await _leaveService.RejectLeaveAsync(id, ctx.Role, ctx.EmployeeId, dto?.Comment);
         if (!success)
         {
             return BadRequest(new { message = "Failed to reject leave request." });

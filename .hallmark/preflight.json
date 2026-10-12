@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-12",
+  "fontStack": "Inter + Space Grotesk + JetBrains Mono via frontend/src/index.css",
+  "palette": "OKLCH custom properties in frontend/src/tokens.css",
+  "motion": "motion-cut; no motion dependency detected",
+  "spacing": "4pt CSS variable scale in frontend/src/tokens.css",
+  "framework": "Vite React"
+}

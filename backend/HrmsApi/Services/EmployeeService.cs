@@ -8,10 +8,12 @@ namespace HrmsApi.Services;
 public class EmployeeService : IEmployeeService
 {
     private readonly IEmployeeRepository _employeeRepository;
+    private readonly IConfiguration? _configuration;
 
-    public EmployeeService(IEmployeeRepository employeeRepository)
+    public EmployeeService(IEmployeeRepository employeeRepository, IConfiguration? configuration = null)
     {
         _employeeRepository = employeeRepository;
+        _configuration = configuration;
     }
 
     public async Task<IEnumerable<EmployeeResponseDto>> GetEmployeesAsync(string userRole, int currentUserId, int? currentEmployeeId, string? search = null, string? status = null, string? department = null)
@@ -23,7 +25,7 @@ public class EmployeeService : IEmployeeService
 
         if (userRole == "Manager" && currentEmployeeId.HasValue)
         {
-            return await _employeeRepository.GetDirectReportsAsync(currentEmployeeId.Value);
+            return await _employeeRepository.GetDirectReportsAsync(currentEmployeeId.Value, search, status, department);
         }
 
         // Employee role can only view their own record
@@ -73,8 +75,8 @@ public class EmployeeService : IEmployeeService
             throw new ArgumentException("Email is required.");
         if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 6)
             throw new ArgumentException("Password must be at least 6 characters.");
-        if (dto.Salary < 0)
-            throw new ArgumentException("Salary cannot be negative.");
+        if (dto.Salary <= 0)
+            throw new ArgumentException("Salary cannot be negative or zero.");
 
         var normalizedEmail = dto.Email.Trim().ToLower();
         var emailExists = await _employeeRepository.IsEmailInUseAsync(normalizedEmail);
@@ -85,10 +87,25 @@ public class EmployeeService : IEmployeeService
 
         if (dto.ManagerID.HasValue)
         {
-            var managerExists = await _employeeRepository.ExistsAsync(dto.ManagerID.Value);
-            if (!managerExists)
+            var manager = await _employeeRepository.GetEmployeeByIdAsync(dto.ManagerID.Value);
+            if (manager == null)
             {
-                throw new ArgumentException("Selected manager does not exist.");
+                var exists = await _employeeRepository.ExistsAsync(dto.ManagerID.Value);
+                if (!exists)
+                {
+                    throw new ArgumentException("Selected manager does not exist.");
+                }
+            }
+            else
+            {
+                if (manager.Status != "Active")
+                {
+                    throw new ArgumentException("Selected manager must be active.");
+                }
+                if (manager.Role != "Manager" && manager.Role != "Admin")
+                {
+                    throw new ArgumentException("Manager must have a Manager or Admin role.");
+                }
             }
         }
 
@@ -110,7 +127,13 @@ public class EmployeeService : IEmployeeService
             ManagerID = dto.ManagerID
         };
 
-        var totalLeaves = dto.TotalLeaves > 0 ? dto.TotalLeaves : 20;
+        var annualAllocation = 24;
+        if (_configuration != null && int.TryParse(_configuration["Leave:AnnualAllocation"], out var cfgAlloc) && cfgAlloc > 0)
+        {
+            annualAllocation = cfgAlloc;
+        }
+
+        var totalLeaves = dto.TotalLeaves > 0 ? dto.TotalLeaves : annualAllocation;
 
         return await _employeeRepository.CreateEmployeeWithUserAndBalanceAsync(user, employee, totalLeaves);
     }
@@ -120,32 +143,67 @@ public class EmployeeService : IEmployeeService
         var existing = await _employeeRepository.GetEmployeeByIdAsync(employeeId)
             ?? throw new KeyNotFoundException("Employee not found.");
 
-        if (dto.Salary < 0)
-            throw new ArgumentException("Salary cannot be negative.");
+        if (dto.Salary <= 0)
+            throw new ArgumentException("Salary cannot be negative or zero.");
 
         if (dto.ManagerID.HasValue)
         {
             if (dto.ManagerID.Value == employeeId)
                 throw new ArgumentException("An employee cannot be their own manager.");
 
-            var managerExists = await _employeeRepository.ExistsAsync(dto.ManagerID.Value);
-            if (!managerExists)
-                throw new ArgumentException("Selected manager does not exist.");
+            var manager = await _employeeRepository.GetEmployeeByIdAsync(dto.ManagerID.Value);
+            if (manager == null)
+            {
+                var exists = await _employeeRepository.ExistsAsync(dto.ManagerID.Value);
+                if (!exists)
+                    throw new ArgumentException("Selected manager does not exist.");
+            }
+            else
+            {
+                if (manager.Status != "Active")
+                    throw new ArgumentException("Selected manager must be active.");
+                if (manager.Role != "Manager" && manager.Role != "Admin")
+                    throw new ArgumentException("Manager must have a Manager or Admin role.");
+            }
+
+            if (await _employeeRepository.WouldCreateManagerCycleAsync(employeeId, dto.ManagerID.Value))
+                throw new ArgumentException("Assigning this manager would create a reporting cycle.");
         }
 
         return await _employeeRepository.UpdateEmployeeAsync(employeeId, dto);
     }
 
-    public async Task<bool> UpdateEmployeeStatusAsync(int employeeId, string status)
+    public async Task<bool> UpdateEmployeeStatusAsync(int employeeId, string status, string? exitReason = null)
     {
         if (status != "Active" && status != "Inactive")
         {
             throw new ArgumentException("Status must be either 'Active' or 'Inactive'.");
         }
 
-        var exists = await _employeeRepository.ExistsAsync(employeeId);
-        if (!exists) throw new KeyNotFoundException("Employee not found.");
+        var existing = await _employeeRepository.GetEmployeeByIdAsync(employeeId);
+        if (existing == null)
+        {
+            var exists = await _employeeRepository.ExistsAsync(employeeId);
+            if (!exists) throw new KeyNotFoundException("Employee not found.");
+        }
 
-        return await _employeeRepository.UpdateEmployeeStatusAsync(employeeId, status);
+        if (status == "Inactive")
+        {
+            if (await _employeeRepository.HasActiveDirectReportsAsync(employeeId))
+            {
+                throw new ConflictException("Cannot deactivate an employee who has active direct reports.");
+            }
+
+            if (existing?.Role == "Admin")
+            {
+                var adminCount = await _employeeRepository.CountActiveAdminsAsync();
+                if (adminCount <= 1)
+                {
+                    throw new ConflictException("Cannot deactivate the last active Admin.");
+                }
+            }
+        }
+
+        return await _employeeRepository.UpdateEmployeeStatusAsync(employeeId, status, exitReason);
     }
 }

@@ -18,7 +18,11 @@ public class JwtHelper
     public string GenerateToken(User user, int? employeeId = null)
     {
         var jwtSettings = _config.GetSection("Jwt");
-        var secretKey = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
+        var secretKey = jwtSettings["Key"];
+        if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Contains("PLACEHOLDER") || secretKey.Length < 32)
+        {
+            throw new InvalidOperationException("JWT Key not configured, left as placeholder, or insecure (must be at least 32 characters).");
+        }
         var issuer = jwtSettings["Issuer"] ?? "HrmsApi";
         var audience = jwtSettings["Audience"] ?? "HrmsClient";
         var expiryHours = int.TryParse(jwtSettings["ExpiresInHours"], out var hours) ? hours : 24;

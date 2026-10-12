@@ -10,4 +10,7 @@ public class Employee
     public decimal Salary { get; set; }
     public string Status { get; set; } = "Active";
     public int? ManagerID { get; set; }
+    public DateTime? DeactivatedAt { get; set; }
+    public string? ExitReason { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

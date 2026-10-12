@@ -13,6 +13,8 @@ public class SqlConnectionFactory : IDbConnectionFactory
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
     }
 
+    public string Provider => "SqlServer";
+
     public IDbConnection CreateConnection()
     {
         return new SqlConnection(_connectionString);

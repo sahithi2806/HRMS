@@ -89,7 +89,7 @@ public class EmployeesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateEmployeeStatus(int id, [FromBody] UpdateEmployeeStatusDto dto)
     {
-        var success = await _employeeService.UpdateEmployeeStatusAsync(id, dto.Status);
+        var success = await _employeeService.UpdateEmployeeStatusAsync(id, dto.Status, dto.ExitReason);
         if (!success)
         {
             return NotFound(new { message = $"Employee with ID {id} not found." });

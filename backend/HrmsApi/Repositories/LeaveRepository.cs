@@ -1,3 +1,4 @@
+using System.Data;
 using Dapper;
 using HrmsApi.Data;
 using HrmsApi.DTOs;
@@ -14,10 +15,18 @@ public class LeaveRepository : ILeaveRepository
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<IEnumerable<LeaveRequestResponseDto>> GetLeaveRequestsForEmployeeAsync(int employeeId)
+    private string TotalDaysSql => _connectionFactory.Provider == "Sqlite"
+        ? "CAST((julianday(lr.EndDate) - julianday(lr.StartDate)) AS INTEGER) + 1"
+        : "DATEDIFF(day, lr.StartDate, lr.EndDate) + 1";
+
+    private string CurrentTimestampSql => _connectionFactory.Provider == "Sqlite"
+        ? "datetime('now')"
+        : "GETDATE()";
+
+    public async Task<IEnumerable<LeaveRequestResponseDto>> GetLeaveRequestsForEmployeeAsync(int employeeId, string? status = null)
     {
         using var connection = _connectionFactory.CreateConnection();
-        const string sql = """
+        var sql = $"""
             SELECT 
                 lr.LeaveID,
                 lr.EmployeeID,
@@ -26,28 +35,31 @@ public class LeaveRepository : ILeaveRepository
                 lr.LeaveType,
                 lr.StartDate,
                 lr.EndDate,
-                DATEDIFF(day, lr.StartDate, lr.EndDate) + 1 AS TotalDays,
+                COALESCE(lr.Days, {TotalDaysSql}) AS Days,
                 lr.Reason,
                 lr.Status,
                 lr.ApprovedBy,
                 apprU.Name AS ApproverName,
-                lr.ApprovedAt
+                lr.ApprovedAt,
+                lr.ManagerComment,
+                lr.CreatedAt
             FROM LeaveRequests lr
             INNER JOIN Employees e ON lr.EmployeeID = e.EmployeeID
             INNER JOIN Users u ON e.UserID = u.UserID
             LEFT JOIN Employees apprE ON lr.ApprovedBy = apprE.EmployeeID
             LEFT JOIN Users apprU ON apprE.UserID = apprU.UserID
             WHERE lr.EmployeeID = @EmployeeID
+              AND (@Status IS NULL OR lr.Status = @Status)
             ORDER BY lr.LeaveID DESC;
             """;
 
-        return await connection.QueryAsync<LeaveRequestResponseDto>(sql, new { EmployeeID = employeeId });
+        return await connection.QueryAsync<LeaveRequestResponseDto>(sql, new { EmployeeID = employeeId, Status = status });
     }
 
-    public async Task<IEnumerable<LeaveRequestResponseDto>> GetLeaveRequestsForManagerAsync(int managerEmployeeId)
+    public async Task<IEnumerable<LeaveRequestResponseDto>> GetLeaveRequestsForManagerAsync(int managerEmployeeId, string? status = null)
     {
         using var connection = _connectionFactory.CreateConnection();
-        const string sql = """
+        var sql = $"""
             SELECT 
                 lr.LeaveID,
                 lr.EmployeeID,
@@ -56,28 +68,31 @@ public class LeaveRepository : ILeaveRepository
                 lr.LeaveType,
                 lr.StartDate,
                 lr.EndDate,
-                DATEDIFF(day, lr.StartDate, lr.EndDate) + 1 AS TotalDays,
+                COALESCE(lr.Days, {TotalDaysSql}) AS Days,
                 lr.Reason,
                 lr.Status,
                 lr.ApprovedBy,
                 apprU.Name AS ApproverName,
-                lr.ApprovedAt
+                lr.ApprovedAt,
+                lr.ManagerComment,
+                lr.CreatedAt
             FROM LeaveRequests lr
             INNER JOIN Employees e ON lr.EmployeeID = e.EmployeeID
             INNER JOIN Users u ON e.UserID = u.UserID
             LEFT JOIN Employees apprE ON lr.ApprovedBy = apprE.EmployeeID
             LEFT JOIN Users apprU ON apprE.UserID = apprU.UserID
-            WHERE e.ManagerID = @ManagerID
+            WHERE (e.ManagerID = @ManagerID OR lr.EmployeeID = @ManagerID)
+              AND (@Status IS NULL OR lr.Status = @Status)
             ORDER BY lr.LeaveID DESC;
             """;
 
-        return await connection.QueryAsync<LeaveRequestResponseDto>(sql, new { ManagerID = managerEmployeeId });
+        return await connection.QueryAsync<LeaveRequestResponseDto>(sql, new { ManagerID = managerEmployeeId, Status = status });
     }
 
     public async Task<IEnumerable<LeaveRequestResponseDto>> GetAllLeaveRequestsAdminAsync(string? status = null)
     {
         using var connection = _connectionFactory.CreateConnection();
-        const string sql = """
+        var sql = $"""
             SELECT 
                 lr.LeaveID,
                 lr.EmployeeID,
@@ -86,12 +101,14 @@ public class LeaveRepository : ILeaveRepository
                 lr.LeaveType,
                 lr.StartDate,
                 lr.EndDate,
-                DATEDIFF(day, lr.StartDate, lr.EndDate) + 1 AS TotalDays,
+                COALESCE(lr.Days, {TotalDaysSql}) AS Days,
                 lr.Reason,
                 lr.Status,
                 lr.ApprovedBy,
                 apprU.Name AS ApproverName,
-                lr.ApprovedAt
+                lr.ApprovedAt,
+                lr.ManagerComment,
+                lr.CreatedAt
             FROM LeaveRequests lr
             INNER JOIN Employees e ON lr.EmployeeID = e.EmployeeID
             INNER JOIN Users u ON e.UserID = u.UserID
@@ -108,7 +125,7 @@ public class LeaveRepository : ILeaveRepository
     {
         using var connection = _connectionFactory.CreateConnection();
         const string sql = """
-            SELECT LeaveID, EmployeeID, LeaveType, StartDate, EndDate, Reason, Status, ApprovedBy, ApprovedAt
+            SELECT LeaveID, EmployeeID, LeaveType, StartDate, EndDate, Days, Reason, Status, ApprovedBy, ApprovedAt, ManagerComment, CreatedAt
             FROM LeaveRequests
             WHERE LeaveID = @LeaveID;
             """;
@@ -119,7 +136,7 @@ public class LeaveRepository : ILeaveRepository
     public async Task<LeaveRequestResponseDto?> GetLeaveRequestByIdAsync(int leaveId)
     {
         using var connection = _connectionFactory.CreateConnection();
-        const string sql = """
+        var sql = $"""
             SELECT 
                 lr.LeaveID,
                 lr.EmployeeID,
@@ -128,12 +145,14 @@ public class LeaveRepository : ILeaveRepository
                 lr.LeaveType,
                 lr.StartDate,
                 lr.EndDate,
-                DATEDIFF(day, lr.StartDate, lr.EndDate) + 1 AS TotalDays,
+                COALESCE(lr.Days, {TotalDaysSql}) AS Days,
                 lr.Reason,
                 lr.Status,
                 lr.ApprovedBy,
                 apprU.Name AS ApproverName,
-                lr.ApprovedAt
+                lr.ApprovedAt,
+                lr.ManagerComment,
+                lr.CreatedAt
             FROM LeaveRequests lr
             INNER JOIN Employees e ON lr.EmployeeID = e.EmployeeID
             INNER JOIN Users u ON e.UserID = u.UserID
@@ -155,24 +174,54 @@ public class LeaveRepository : ILeaveRepository
                 u.Name AS EmployeeName,
                 lb.TotalLeaves,
                 lb.UsedLeaves,
-                lb.RemainingLeaves
+                lb.RemainingLeaves,
+                COALESCE((
+                    SELECT SUM(Days)
+                    FROM LeaveRequests
+                    WHERE EmployeeID = lb.EmployeeID AND Status = 'Pending'
+                ), 0) AS PendingDays
             FROM LeaveBalance lb
             INNER JOIN Employees e ON lb.EmployeeID = e.EmployeeID
             INNER JOIN Users u ON e.UserID = u.UserID
             WHERE lb.EmployeeID = @EmployeeID;
             """;
 
-        return await connection.QueryFirstOrDefaultAsync<LeaveBalanceDto>(sql, new { EmployeeID = employeeId });
+        var balance = await connection.QueryFirstOrDefaultAsync<LeaveBalanceDto>(sql, new { EmployeeID = employeeId });
+        if (balance != null)
+        {
+            balance.AvailableToRequest = Math.Max(0, balance.RemainingLeaves - balance.PendingDays);
+        }
+        return balance;
+    }
+
+    public async Task<int> GetPendingLeaveDaysForEmployeeAsync(int employeeId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string sql = """
+            SELECT COALESCE(SUM(Days), 0)
+            FROM LeaveRequests
+            WHERE EmployeeID = @EmployeeID AND Status = 'Pending';
+            """;
+
+        return await connection.ExecuteScalarAsync<int>(sql, new { EmployeeID = employeeId });
     }
 
     public async Task<LeaveRequestResponseDto> CreateLeaveRequestAsync(LeaveRequest request)
     {
         using var connection = _connectionFactory.CreateConnection();
-        const string sql = """
-            INSERT INTO LeaveRequests (EmployeeID, LeaveType, StartDate, EndDate, Reason, Status, ApprovedBy, ApprovedAt)
-            OUTPUT INSERTED.LeaveID
-            VALUES (@EmployeeID, @LeaveType, @StartDate, @EndDate, @Reason, 'Pending', NULL, NULL);
-            """;
+        var isSqlite = _connectionFactory.Provider == "Sqlite";
+        var currentTimestamp = isSqlite ? "datetime('now')" : "GETUTCDATE()";
+        var sql = isSqlite
+            ? $"""
+              INSERT INTO LeaveRequests (EmployeeID, LeaveType, StartDate, EndDate, Days, Reason, Status, ApprovedBy, ApprovedAt, ManagerComment, CreatedAt)
+              VALUES (@EmployeeID, @LeaveType, @StartDate, @EndDate, @Days, @Reason, 'Pending', NULL, NULL, NULL, {currentTimestamp});
+              SELECT last_insert_rowid();
+              """
+            : $"""
+              INSERT INTO LeaveRequests (EmployeeID, LeaveType, StartDate, EndDate, Days, Reason, Status, ApprovedBy, ApprovedAt, ManagerComment, CreatedAt)
+              OUTPUT INSERTED.LeaveID
+              VALUES (@EmployeeID, @LeaveType, @StartDate, @EndDate, @Days, @Reason, 'Pending', NULL, NULL, NULL, {currentTimestamp});
+              """;
 
         var id = await connection.ExecuteScalarAsync<int>(sql, new
         {
@@ -180,6 +229,7 @@ public class LeaveRepository : ILeaveRepository
             request.LeaveType,
             request.StartDate,
             request.EndDate,
+            request.Days,
             request.Reason
         });
 
@@ -209,27 +259,33 @@ public class LeaveRepository : ILeaveRepository
         return count > 0;
     }
 
-    public async Task<bool> ApproveLeaveTransactionAsync(int leaveId, int employeeId, int managerEmployeeId, int daysToDeduct)
+    public async Task<bool> ApproveLeaveTransactionAsync(int leaveId, int employeeId, int approverEmployeeId, int daysToDeduct, string? comment = null)
     {
         using var connection = _connectionFactory.CreateConnection();
-        connection.Open();
+        if (connection.State != ConnectionState.Open)
+        {
+            connection.Open();
+        }
         using var transaction = connection.BeginTransaction();
 
         try
         {
-            // 1. Update LeaveRequest to Approved
-            const string updateRequestSql = """
+            var currentTimestamp = _connectionFactory.Provider == "Sqlite" ? "datetime('now')" : "GETUTCDATE()";
+            // 1. Update LeaveRequest to Approved (atomic conditional check Status = 'Pending')
+            var updateRequestSql = $"""
                 UPDATE LeaveRequests
                 SET Status = 'Approved',
                     ApprovedBy = @ApprovedBy,
-                    ApprovedAt = GETDATE()
+                    ApprovedAt = {currentTimestamp},
+                    ManagerComment = @ManagerComment
                 WHERE LeaveID = @LeaveID AND Status = 'Pending';
                 """;
 
             var updatedRows = await connection.ExecuteAsync(updateRequestSql, new
             {
                 LeaveID = leaveId,
-                ApprovedBy = managerEmployeeId
+                ApprovedBy = approverEmployeeId,
+                ManagerComment = comment
             }, transaction);
 
             if (updatedRows == 0)
@@ -238,13 +294,20 @@ public class LeaveRepository : ILeaveRepository
                 return false;
             }
 
-            // 2. Atomically update LeaveBalance
-            const string updateBalanceSql = """
-                UPDATE LeaveBalance
-                SET UsedLeaves = UsedLeaves + @Days,
-                    RemainingLeaves = RemainingLeaves - @Days
-                WHERE EmployeeID = @EmployeeID AND RemainingLeaves >= @Days;
-                """;
+            // 2. Atomically update LeaveBalance without writing RemainingLeaves (persisted computed column in SQL Server)
+            var isSqlite = _connectionFactory.Provider == "Sqlite";
+            var updateBalanceSql = isSqlite
+                ? """
+                  UPDATE LeaveBalance
+                  SET UsedLeaves = UsedLeaves + @Days,
+                      RemainingLeaves = TotalLeaves - (UsedLeaves + @Days)
+                  WHERE EmployeeID = @EmployeeID AND (TotalLeaves - UsedLeaves) >= @Days;
+                  """
+                : """
+                  UPDATE LeaveBalance
+                  SET UsedLeaves = UsedLeaves + @Days
+                  WHERE EmployeeID = @EmployeeID AND (TotalLeaves - UsedLeaves) >= @Days;
+                  """;
 
             var balanceRows = await connection.ExecuteAsync(updateBalanceSql, new
             {
@@ -254,7 +317,6 @@ public class LeaveRepository : ILeaveRepository
 
             if (balanceRows == 0)
             {
-                // Balance was insufficient or employee balance record missing
                 transaction.Rollback();
                 return false;
             }
@@ -269,21 +331,24 @@ public class LeaveRepository : ILeaveRepository
         }
     }
 
-    public async Task<bool> RejectLeaveRequestAsync(int leaveId, int managerEmployeeId)
+    public async Task<bool> RejectLeaveRequestAsync(int leaveId, int approverEmployeeId, string? comment = null)
     {
         using var connection = _connectionFactory.CreateConnection();
-        const string sql = """
+        var currentTimestamp = _connectionFactory.Provider == "Sqlite" ? "datetime('now')" : "GETUTCDATE()";
+        var sql = $"""
             UPDATE LeaveRequests
             SET Status = 'Rejected',
                 ApprovedBy = @ApprovedBy,
-                ApprovedAt = GETDATE()
+                ApprovedAt = {currentTimestamp},
+                ManagerComment = @ManagerComment
             WHERE LeaveID = @LeaveID AND Status = 'Pending';
             """;
 
         var affected = await connection.ExecuteAsync(sql, new
         {
             LeaveID = leaveId,
-            ApprovedBy = managerEmployeeId
+            ApprovedBy = approverEmployeeId,
+            ManagerComment = comment
         });
 
         return affected > 0;

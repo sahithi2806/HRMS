@@ -1,6 +1,129 @@
-@HrmsApi_HostAddress = http://localhost:5160
+@HrmsApi_HostAddress = http://localhost:5000
 
-GET {{HrmsApi_HostAddress}}/weatherforecast/
-Accept: application/json
+### 1. Login as Admin
+# @name adminLogin
+POST {{HrmsApi_HostAddress}}/api/auth/login
+Content-Type: application/json
 
-###
+{
+  "email": "admin@hrms.com",
+  "password": "Admin@123"
+}
+
+### 2. Login as Manager
+# @name managerLogin
+POST {{HrmsApi_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "manager@hrms.com",
+  "password": "Manager@123"
+}
+
+### 3. Login as Employee
+# @name employeeLogin
+POST {{HrmsApi_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "employee@hrms.com",
+  "password": "Employee@123"
+}
+
+### Store Token Variables (Replace with actual JWT token from login response)
+@adminToken = {{adminLogin.response.body.token}}
+@managerToken = {{managerLogin.response.body.token}}
+@employeeToken = {{employeeLogin.response.body.token}}
+
+### 4. Get Current User Profile (Me)
+GET {{HrmsApi_HostAddress}}/api/auth/me
+Authorization: Bearer {{adminToken}}
+
+### 5. Get Leave Balance (Includes pendingDays and availableToRequest)
+GET {{HrmsApi_HostAddress}}/api/leave/balance
+Authorization: Bearer {{employeeToken}}
+
+### 6. Apply for Leave (Weekend Spanning: Fri to Mon = 2 business days)
+POST {{HrmsApi_HostAddress}}/api/leave
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "leaveType": "Casual",
+  "startDate": "2026-11-20",
+  "endDate": "2026-11-23",
+  "reason": "Family weekend trip"
+}
+
+### 7. Get All Leave Requests
+GET {{HrmsApi_HostAddress}}/api/leave
+Authorization: Bearer {{managerToken}}
+
+### 8. Approve Leave with Manager Comment
+PUT {{HrmsApi_HostAddress}}/api/leave/1/approve
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "comment": "Approved. Please ensure handoff is complete."
+}
+
+### 9. Reject Leave with Manager Comment
+PUT {{HrmsApi_HostAddress}}/api/leave/2/reject
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "comment": "Critical sprint deadline during these dates."
+}
+
+### 10. List Employees (Admin)
+GET {{HrmsApi_HostAddress}}/api/employees
+Authorization: Bearer {{adminToken}}
+
+### 11. Create New Employee (with AnnualAllocation = 24 default)
+POST {{HrmsApi_HostAddress}}/api/employees
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Dev Sharma",
+  "email": "dev.sharma@hrms.com",
+  "password": "Password@123",
+  "role": "Employee",
+  "department": "Engineering",
+  "position": "Backend Developer",
+  "joiningDate": "2026-10-15",
+  "salary": 1800000.00,
+  "managerID": 2
+}
+
+### 12. Deactivate Employee with ExitReason
+PATCH {{HrmsApi_HostAddress}}/api/employees/8/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "Inactive",
+  "exitReason": "Relocation to higher studies abroad"
+}
+
+### 13. Hardening Test: Deactivate Employee with Active Direct Reports (Expects 409 Conflict)
+PATCH {{HrmsApi_HostAddress}}/api/employees/2/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "Inactive",
+  "exitReason": "Attempt to deactivate manager with reports"
+}
+
+### 14. Hardening Test: Deactivate Last Active Admin (Expects 409 Conflict)
+PATCH {{HrmsApi_HostAddress}}/api/employees/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "Inactive",
+  "exitReason": "Attempt to deactivate last admin"
+}

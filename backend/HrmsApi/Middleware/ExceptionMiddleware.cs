@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using HrmsApi.Helpers;
 
 namespace HrmsApi.Middleware;
 
@@ -34,20 +35,30 @@ public class ExceptionMiddleware
         var statusCode = HttpStatusCode.InternalServerError;
         var message = "An internal server error occurred. Please try again later.";
 
-        if (exception is KeyNotFoundException)
+        if (exception is ConflictException)
+        {
+            statusCode = HttpStatusCode.Conflict;
+            message = exception.Message;
+        }
+        else if (exception is KeyNotFoundException)
         {
             statusCode = HttpStatusCode.NotFound;
             message = exception.Message;
         }
         else if (exception is UnauthorizedAccessException)
         {
-            statusCode = HttpStatusCode.Unauthorized;
+            statusCode = HttpStatusCode.Forbidden;
             message = exception.Message;
         }
         else if (exception is ArgumentException or InvalidOperationException)
         {
             statusCode = HttpStatusCode.BadRequest;
             message = exception.Message;
+        }
+        else if (exception is Microsoft.Data.SqlClient.SqlException)
+        {
+            statusCode = HttpStatusCode.ServiceUnavailable;
+            message = "Database connection error: Unable to reach SQL Server. Please verify that Microsoft SQL Server is running on localhost and the HrmsDb database is initialized.";
         }
 
         context.Response.StatusCode = (int)statusCode;

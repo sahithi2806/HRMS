@@ -11,7 +11,7 @@ public class CreateEmployeeDto
     public DateTime JoiningDate { get; set; }
     public decimal Salary { get; set; }
     public int? ManagerID { get; set; }
-    public int TotalLeaves { get; set; } = 20;
+    public int TotalLeaves { get; set; } = 0;
 }
 
 public class UpdateEmployeeDto
@@ -25,6 +25,7 @@ public class UpdateEmployeeDto
 public class UpdateEmployeeStatusDto
 {
     public string Status { get; set; } = "Active"; // Active, Inactive
+    public string? ExitReason { get; set; }
 }
 
 public class EmployeeResponseDto
@@ -44,4 +45,7 @@ public class EmployeeResponseDto
     public int? TotalLeaves { get; set; }
     public int? UsedLeaves { get; set; }
     public int? RemainingLeaves { get; set; }
+    public DateTime? DeactivatedAt { get; set; }
+    public string? ExitReason { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

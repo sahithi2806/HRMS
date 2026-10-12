@@ -17,12 +17,15 @@ public class LeaveRequestResponseDto
     public string LeaveType { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public int TotalDays { get; set; }
+    public int Days { get; set; }
+    public int TotalDays => Days; // Backward-compatible alias
     public string Reason { get; set; } = string.Empty;
     public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
     public int? ApprovedBy { get; set; }
     public string? ApproverName { get; set; }
     public DateTime? ApprovedAt { get; set; }
+    public string? ManagerComment { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
 public class LeaveBalanceDto
@@ -33,4 +36,11 @@ public class LeaveBalanceDto
     public int TotalLeaves { get; set; }
     public int UsedLeaves { get; set; }
     public int RemainingLeaves { get; set; }
+    public int PendingDays { get; set; }
+    public int AvailableToRequest { get; set; }
+}
+
+public class LeaveActionDto
+{
+    public string? Comment { get; set; }
 }

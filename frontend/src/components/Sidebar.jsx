@@ -1,10 +1,21 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Users, FileText, User, Calendar, Award } from 'lucide-react';
+import { Users, FileText, User, Calendar, LogOut, Shield, Briefcase, UserCheck } from 'lucide-react';
 
 export const Sidebar = () => {
-  const { role, isAdmin, isManager } = useAuth();
+  const { user, role, isAdmin, isManager, logout } = useAuth();
+
+  const getRoleIcon = () => {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return <Shield size={12} />;
+      case 'manager':
+        return <Briefcase size={12} />;
+      default:
+        return <UserCheck size={12} />;
+    }
+  };
 
   return (
     <aside className="sidebar">
@@ -56,8 +67,29 @@ export const Sidebar = () => {
         </NavLink>
       </nav>
 
-      <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.75rem', color: '#64748b' }}>
-        Logged in as <strong style={{ color: '#cbd5e1' }}>{role}</strong>
+      {/* Pinned Bottom User & Logout Section */}
+      <div className="sidebar-footer">
+        <div className="sidebar-user-card">
+          <div className="sidebar-user-avatar">
+            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          </div>
+          <div className="sidebar-user-info">
+            <span className="sidebar-user-name">{user?.name || 'User'}</span>
+            <span className="sidebar-user-role">
+              {getRoleIcon()}
+              <span>{role}</span>
+            </span>
+          </div>
+        </div>
+
+        <button
+          onClick={logout}
+          className="sidebar-logout-btn"
+          title="Sign out of HRMS"
+        >
+          <LogOut size={16} />
+          <span>Sign Out / Logout</span>
+        </button>
       </div>
     </aside>
   );

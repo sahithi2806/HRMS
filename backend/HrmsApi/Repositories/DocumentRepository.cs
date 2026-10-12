@@ -92,11 +92,18 @@ public class DocumentRepository : IDocumentRepository
     public async Task<DocumentResponseDto> CreateDocumentAsync(Document document)
     {
         using var connection = _connectionFactory.CreateConnection();
-        const string sql = """
-            INSERT INTO Documents (Title, Category, FilePath, UploadedBy, UploadedAt, IsActive)
-            OUTPUT INSERTED.DocumentID
-            VALUES (@Title, @Category, @FilePath, @UploadedBy, GETDATE(), @IsActive);
-            """;
+        var isSqlite = _connectionFactory.Provider == "Sqlite";
+        var sql = isSqlite
+            ? """
+              INSERT INTO Documents (Title, Category, FilePath, UploadedBy, UploadedAt, IsActive)
+              VALUES (@Title, @Category, @FilePath, @UploadedBy, datetime('now'), @IsActive);
+              SELECT last_insert_rowid();
+              """
+            : """
+              INSERT INTO Documents (Title, Category, FilePath, UploadedBy, UploadedAt, IsActive)
+              OUTPUT INSERTED.DocumentID
+              VALUES (@Title, @Category, @FilePath, @UploadedBy, GETDATE(), @IsActive);
+              """;
 
         var id = await connection.ExecuteScalarAsync<int>(sql, new
         {

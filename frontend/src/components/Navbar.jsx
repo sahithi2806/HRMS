@@ -30,9 +30,13 @@ export const Navbar = () => {
   return (
     <header className="top-navbar">
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
-          HRMS Portal
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+          HRMS Enterprise Portal
         </h2>
+        <span style={{ fontSize: '0.72rem', background: '#ecfdf5', color: '#047857', padding: '3px 10px', borderRadius: '12px', fontWeight: 600, border: '1px solid #a7f3d0', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
+          India Region Workspace
+        </span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>

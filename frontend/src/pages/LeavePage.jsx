@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Calendar, Clock, CheckCircle2, XCircle, Plus, 
-  AlertCircle, Check, X, Filter, User, HelpCircle 
+  Calendar, Clock, CheckCircle2, Plus, 
+  Check, X, AlertCircle 
 } from 'lucide-react';
 
+const TODAY_ISO = new Date().toISOString().split('T')[0];
+
 export const LeavePage = () => {
-  const { user, role, isAdmin, isManager } = useAuth();
+  const { isAdmin, isManager } = useAuth();
   const [requests, setRequests] = useState([]);
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All'); // All, Pending, Approved, Rejected
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Modal states
   const [isApplyOpen, setIsApplyOpen] = useState(false);
@@ -23,69 +26,85 @@ export const LeavePage = () => {
   const [formError, setFormError] = useState('');
   const [toastMessage, setToastMessage] = useState('');
 
-  const fetchLeaveData = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch requests
-      const params = {};
-      if (activeTab !== 'All') {
-        params.status = activeTab;
-      }
-      const reqRes = await api.get('/leave', { params });
-      setRequests(reqRes.data);
-
-      // Fetch balance (for current user)
-      try {
-        const balRes = await api.get('/leave/balance');
-        setBalance(balRes.data);
-      } catch (err) {
-        // Top-level admins without employee record might not have a balance
-        console.warn('Balance not found:', err);
-      }
-    } catch (err) {
-      console.error('Failed to load leave data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchLeaveData();
-  }, [activeTab]);
+    let ignore = false;
+    async function loadData() {
+      try {
+        const params = {};
+        if (activeTab !== 'All') {
+          params.status = activeTab;
+        }
+        const reqRes = await api.get('/leave', { params });
+        if (!ignore) {
+          setRequests(reqRes.data);
+        }
+
+        try {
+          const balRes = await api.get('/leave/balance');
+          if (!ignore) {
+            setBalance(balRes.data);
+          }
+        } catch (err) {
+          console.warn('Balance not found:', err);
+        }
+      } catch (err) {
+        console.error('Failed to load leave data:', err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadData();
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab, refreshTrigger]);
+
+  const refreshData = () => setRefreshTrigger((prev) => prev + 1);
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3500);
   };
 
-  const calculateDays = () => {
+  const calculateBusinessDays = useCallback(() => {
     if (!startDate || !endDate) return 0;
-    const s = new Date(startDate);
-    const e = new Date(endDate);
-    if (e < s) return 0;
-    const diff = Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1;
-    return diff > 0 ? diff : 0;
-  };
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (end < start) return 0;
+
+    let count = 0;
+    const cur = new Date(start);
+    while (cur <= end) {
+      const day = cur.getDay();
+      if (day !== 0 && day !== 6) {
+        count++;
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+    return count;
+  }, [startDate, endDate]);
 
   const handleApplySubmit = async (e) => {
     e.preventDefault();
     setFormError('');
 
-    const days = calculateDays();
+    const days = calculateBusinessDays();
     if (days <= 0) {
-      setFormError('End date must be on or after start date.');
+      setFormError('Leave request must contain at least one business day (weekends are excluded).');
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    if (startDate < today) {
+    if (startDate < TODAY_ISO) {
       setFormError('Leave cannot be scheduled in the past.');
       return;
     }
 
-    if (balance && days > balance.remainingLeaves) {
-      setFormError(`Requested ${days} days exceeds your remaining balance of ${balance.remainingLeaves} days.`);
+    const maxAvailable = balance?.availableToRequest ?? balance?.remainingLeaves ?? 0;
+    if (balance && days > maxAvailable) {
+      setFormError(`Requested ${days} business days exceeds your available balance of ${maxAvailable} days.`);
       return;
     }
 
@@ -108,7 +127,7 @@ export const LeavePage = () => {
       setEndDate('');
       setReason('');
       showToast('Leave request submitted successfully!');
-      fetchLeaveData();
+      refreshData();
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to submit leave request.');
     } finally {
@@ -117,30 +136,24 @@ export const LeavePage = () => {
   };
 
   const handleApprove = async (leaveId) => {
-    if (!window.confirm('Are you sure you want to approve this leave request and deduct employee balance?')) {
-      return;
-    }
-
+    const comment = window.prompt('Optional manager approval comment:');
     try {
-      await api.put(`/leave/${leaveId}/approve`);
-      showToast('Leave request approved and balance updated!');
-      fetchLeaveData();
+      await api.put(`/leave/${leaveId}/approve`, { comment: comment || null });
+      showToast('Leave request approved and balance updated successfully!');
+      refreshData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to approve request.');
+      showToast(err.response?.data?.message || 'Failed to approve request.');
     }
   };
 
   const handleReject = async (leaveId) => {
-    if (!window.confirm('Are you sure you want to reject this leave request?')) {
-      return;
-    }
-
+    const comment = window.prompt('Reason for rejecting leave (optional):');
     try {
-      await api.put(`/leave/${leaveId}/reject`);
+      await api.put(`/leave/${leaveId}/reject`, { comment: comment || null });
       showToast('Leave request marked as Rejected.');
-      fetchLeaveData();
+      refreshData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reject request.');
+      showToast(err.response?.data?.message || 'Failed to reject request.');
     }
   };
 
@@ -169,9 +182,6 @@ export const LeavePage = () => {
         return <span className="badge" style={{ backgroundColor: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>Casual Leave</span>;
     }
   };
-
-  const pendingCount = requests.filter((r) => r.status === 'Pending').length;
-  const approvedCount = requests.filter((r) => r.status === 'Approved').length;
 
   return (
     <div className="page-body">
@@ -222,9 +232,9 @@ export const LeavePage = () => {
         </button>
       </div>
 
-      {/* Balance Cards */}
+      {/* Balance Cards with Pending and Available To Request */}
       {balance && (
-        <div className="stats-grid">
+        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
           <div className="stat-card">
             <div className="stat-icon" style={{ backgroundColor: '#eef2ff', color: '#4f46e5' }}>
               <Calendar size={22} />
@@ -251,7 +261,17 @@ export const LeavePage = () => {
             </div>
             <div>
               <div className="stat-value">{balance.remainingLeaves} <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>days</span></div>
-              <div className="stat-label">Available Remaining Balance</div>
+              <div className="stat-label">Remaining Balance</div>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon" style={{ backgroundColor: '#f0f9ff', color: '#0284c7' }}>
+              <AlertCircle size={22} />
+            </div>
+            <div>
+              <div className="stat-value">{balance.availableToRequest ?? balance.remainingLeaves} <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>days</span></div>
+              <div className="stat-label">Available to Request {balance.pendingDays > 0 ? `(${balance.pendingDays} pending)` : ''}</div>
             </div>
           </div>
         </div>
@@ -267,37 +287,23 @@ export const LeavePage = () => {
               className={`btn btn-sm ${activeTab === tab ? 'btn-primary' : 'btn-secondary'}`}
               style={{ padding: '7px 16px', fontWeight: 600 }}
             >
-              <span>{tab}</span>
-              {tab === 'Pending' && pendingCount > 0 && (
-                <span
-                  style={{
-                    marginLeft: '4px',
-                    backgroundColor: activeTab === tab ? '#ffffff' : '#f59e0b',
-                    color: activeTab === tab ? '#4f46e5' : '#ffffff',
-                    padding: '1px 6px',
-                    borderRadius: '10px',
-                    fontSize: '0.72rem'
-                  }}
-                >
-                  {pendingCount}
-                </span>
-              )}
+              {tab}
             </button>
           ))}
         </div>
       </div>
 
       {/* Requests Table */}
-      <div className="table-wrapper">
-        <table>
+      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+        <table className="table">
           <thead>
             <tr>
               <th>Employee</th>
-              <th>Type</th>
-              <th>Dates & Duration</th>
-              <th>Reason</th>
+              <th>Leave Type</th>
+              <th>Dates & Business Days</th>
+              <th>Reason & Manager Comment</th>
               <th>Status</th>
-              <th>Approver Info</th>
+              <th>Decision / Date</th>
               {(isAdmin || isManager) && <th style={{ textAlign: 'right' }}>Actions</th>}
             </tr>
           </thead>
@@ -329,12 +335,17 @@ export const LeavePage = () => {
                       {new Date(req.startDate).toLocaleDateString()} – {new Date(req.endDate).toLocaleDateString()}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: '#4f46e5', fontWeight: 600 }}>
-                      {req.totalDays} {req.totalDays === 1 ? 'day' : 'days'}
+                      {req.days ?? req.totalDays} {(req.days ?? req.totalDays) === 1 ? 'business day' : 'business days'}
                     </div>
                   </td>
 
                   <td style={{ maxWidth: '280px', fontSize: '0.86rem', color: '#334155' }}>
-                    {req.reason}
+                    <div>{req.reason}</div>
+                    {req.managerComment && (
+                      <div style={{ marginTop: '4px', fontSize: '0.76rem', color: '#64748b', fontStyle: 'italic', background: '#f8fafc', padding: '4px 8px', borderRadius: '4px' }}>
+                        Note: {req.managerComment}
+                      </div>
+                    )}
                   </td>
 
                   <td>{getStatusBadge(req.status)}</td>
@@ -424,7 +435,7 @@ export const LeavePage = () => {
                     type="date"
                     className="form-input"
                     value={startDate}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={TODAY_ISO}
                     onChange={(e) => setStartDate(e.target.value)}
                     required
                   />
@@ -436,7 +447,7 @@ export const LeavePage = () => {
                     type="date"
                     className="form-input"
                     value={endDate}
-                    min={startDate || new Date().toISOString().split('T')[0]}
+                    min={startDate || TODAY_ISO}
                     onChange={(e) => setEndDate(e.target.value)}
                     required
                   />
@@ -445,8 +456,8 @@ export const LeavePage = () => {
 
               {startDate && endDate && (
                 <div style={{ padding: '10px 14px', background: '#eef2ff', borderRadius: '8px', marginBottom: '16px', fontSize: '0.85rem', color: '#4338ca', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Requested Duration:</span>
-                  <strong>{calculateDays()} {calculateDays() === 1 ? 'day' : 'days'}</strong>
+                  <span>Requested Business Days (Excluding Weekends):</span>
+                  <strong>{calculateBusinessDays()} {calculateBusinessDays() === 1 ? 'day' : 'days'}</strong>
                 </div>
               )}
 

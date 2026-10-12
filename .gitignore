@@ -5,6 +5,9 @@
 *.suo
 *.userosscache
 *.sln.docstates
+*.db
+*.db-shm
+*.db-wal
 
 # Storage uploaded files
 backend/HrmsApi/Storage/Documents/*

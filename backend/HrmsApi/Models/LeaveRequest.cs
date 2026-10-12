@@ -9,6 +9,9 @@ public class LeaveRequest
     public DateTime EndDate { get; set; }
     public string Reason { get; set; } = string.Empty;
     public string Status { get; set; } = "Pending";
+    public int Days { get; set; }
     public int? ApprovedBy { get; set; }
     public DateTime? ApprovedAt { get; set; }
+    public string? ManagerComment { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

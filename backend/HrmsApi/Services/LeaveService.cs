@@ -1,4 +1,5 @@
 using HrmsApi.DTOs;
+using HrmsApi.Helpers;
 using HrmsApi.Models;
 using HrmsApi.Repositories;
 
@@ -29,12 +30,12 @@ public class LeaveService : ILeaveService
 
         if (userRole == "Manager" && currentEmployeeId.HasValue)
         {
-            return await _leaveRepository.GetLeaveRequestsForManagerAsync(currentEmployeeId.Value);
+            return await _leaveRepository.GetLeaveRequestsForManagerAsync(currentEmployeeId.Value, status);
         }
 
         if (currentEmployeeId.HasValue)
         {
-            return await _leaveRepository.GetLeaveRequestsForEmployeeAsync(currentEmployeeId.Value);
+            return await _leaveRepository.GetLeaveRequestsForEmployeeAsync(currentEmployeeId.Value, status);
         }
 
         return Enumerable.Empty<LeaveRequestResponseDto>();
@@ -59,7 +60,7 @@ public class LeaveService : ILeaveService
 
         var empId = currentEmployeeId.Value;
 
-        if (string.IsNullOrWhiteSpace(dto.LeaveType) || !AllowedLeaveTypes.Contains(dto.LeaveType))
+        if (string.IsNullOrWhiteSpace(dto.LeaveType) || !AllowedLeaveTypes.Contains(dto.LeaveType.Trim()))
         {
             throw new ArgumentException("Invalid LeaveType. Allowed types are: Casual, Sick, Earned.");
         }
@@ -82,19 +83,22 @@ public class LeaveService : ILeaveService
             throw new ArgumentException("Leave cannot be applied for past dates.");
         }
 
-        var requestedDays = (end - start).Days + 1;
+        var requestedDays = BusinessDays.Calculate(start, end);
         if (requestedDays <= 0)
         {
-            throw new ArgumentException("Invalid leave duration.");
+            throw new ArgumentException("Leave request must include at least one business day (weekends are not counted).");
         }
 
-        // Check employee balance
+        // Check employee balance & pending requests (availability at apply = Remaining - own Pending days)
         var balance = await _leaveRepository.GetLeaveBalanceAsync(empId)
             ?? throw new InvalidOperationException("Leave balance record not found for employee.");
 
-        if (balance.RemainingLeaves < requestedDays)
+        var pendingDays = await _leaveRepository.GetPendingLeaveDaysForEmployeeAsync(empId);
+        var availableToRequest = balance.RemainingLeaves - pendingDays;
+
+        if (requestedDays > availableToRequest)
         {
-            throw new InvalidOperationException($"Insufficient leave balance. Requested: {requestedDays} days, Available: {balance.RemainingLeaves} days.");
+            throw new InvalidOperationException($"Insufficient leave balance. Requested: {requestedDays} days, Available: {availableToRequest} days (Remaining: {balance.RemainingLeaves}, Pending: {pendingDays}).");
         }
 
         // Check for overlapping leaves
@@ -110,6 +114,7 @@ public class LeaveService : ILeaveService
             LeaveType = dto.LeaveType.Trim(),
             StartDate = start,
             EndDate = end,
+            Days = requestedDays,
             Reason = dto.Reason.Trim(),
             Status = "Pending"
         };
@@ -117,7 +122,7 @@ public class LeaveService : ILeaveService
         return await _leaveRepository.CreateLeaveRequestAsync(request);
     }
 
-    public async Task<bool> ApproveLeaveAsync(int leaveId, string userRole, int? managerEmployeeId)
+    public async Task<bool> ApproveLeaveAsync(int leaveId, string userRole, int? managerEmployeeId, string? comment = null)
     {
         var request = await _leaveRepository.GetLeaveRequestEntityByIdAsync(leaveId)
             ?? throw new KeyNotFoundException("Leave request not found.");
@@ -130,17 +135,11 @@ public class LeaveService : ILeaveService
         var employee = await _employeeRepository.GetEmployeeByIdAsync(request.EmployeeID)
             ?? throw new KeyNotFoundException("Employee associated with leave request not found.");
 
-        // Verify manager authority: user must be Admin or the employee's direct reporting manager
-        if (userRole != "Admin")
-        {
-            if (!managerEmployeeId.HasValue || employee.ManagerID != managerEmployeeId.Value)
-            {
-                throw new UnauthorizedAccessException("You can only approve leave requests for your direct reports.");
-            }
-        }
+        // Enforce Decision #1 shared approval rules via pure ApprovalPolicy
+        ApprovalPolicy.ValidateCanApproveOrReject(request.EmployeeID, employee.ManagerID, managerEmployeeId, userRole);
 
-        var approverId = managerEmployeeId ?? employee.ManagerID ?? employee.EmployeeID;
-        var requestedDays = (request.EndDate.Date - request.StartDate.Date).Days + 1;
+        var approverId = managerEmployeeId!.Value;
+        var requestedDays = request.Days > 0 ? request.Days : BusinessDays.Calculate(request.StartDate, request.EndDate);
 
         var balance = await _leaveRepository.GetLeaveBalanceAsync(request.EmployeeID)
             ?? throw new InvalidOperationException("Employee leave balance not found.");
@@ -154,7 +153,8 @@ public class LeaveService : ILeaveService
             leaveId,
             request.EmployeeID,
             approverId,
-            requestedDays
+            requestedDays,
+            comment
         );
 
         if (!success)
@@ -165,7 +165,7 @@ public class LeaveService : ILeaveService
         return true;
     }
 
-    public async Task<bool> RejectLeaveAsync(int leaveId, string userRole, int? managerEmployeeId)
+    public async Task<bool> RejectLeaveAsync(int leaveId, string userRole, int? managerEmployeeId, string? comment = null)
     {
         var request = await _leaveRepository.GetLeaveRequestEntityByIdAsync(leaveId)
             ?? throw new KeyNotFoundException("Leave request not found.");
@@ -178,16 +178,10 @@ public class LeaveService : ILeaveService
         var employee = await _employeeRepository.GetEmployeeByIdAsync(request.EmployeeID)
             ?? throw new KeyNotFoundException("Employee associated with leave request not found.");
 
-        // Verify manager authority: Admin or direct manager
-        if (userRole != "Admin")
-        {
-            if (!managerEmployeeId.HasValue || employee.ManagerID != managerEmployeeId.Value)
-            {
-                throw new UnauthorizedAccessException("You can only reject leave requests for your direct reports.");
-            }
-        }
+        // Enforce Decision #1 shared approval rules via pure ApprovalPolicy
+        ApprovalPolicy.ValidateCanApproveOrReject(request.EmployeeID, employee.ManagerID, managerEmployeeId, userRole);
 
-        var rejecterId = managerEmployeeId ?? employee.ManagerID ?? employee.EmployeeID;
-        return await _leaveRepository.RejectLeaveRequestAsync(leaveId, rejecterId);
+        var approverId = managerEmployeeId!.Value;
+        return await _leaveRepository.RejectLeaveRequestAsync(leaveId, approverId, comment);
     }
 }

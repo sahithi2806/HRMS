@@ -1,0 +1,29 @@
+[
+  {
+    "date": "2026-10-12",
+    "macrostructure": "app-auth",
+    "theme": "Cobalt (continuous dark cobalt)",
+    "enrichment": "2 soft radial glows + tinted dot grid + noise overlay",
+    "nav": "none",
+    "footer": "Ft2 inline single line",
+    "brief": "Aether HR login continuous dark cobalt surface with crisp white card & dark glass posture"
+  },
+  {
+    "date": "2026-10-12",
+    "macrostructure": "app-auth",
+    "theme": "Cobalt (deep cobalt aurora)",
+    "enrichment": "radial-aurora-blobs + noise-texture",
+    "nav": "none",
+    "footer": "Ft2 inline single line",
+    "brief": "Aether HR login deep cobalt aurora gradient & WCAG AA tokens"
+  },
+  {
+    "date": "2026-10-12",
+    "macrostructure": "app-auth",
+    "theme": "Cobalt (modern-minimal)",
+    "enrichment": "none",
+    "nav": "none",
+    "footer": "Ft2 inline single line",
+    "brief": "HRMS web app shared theme tokens & login screen"
+  }
+]

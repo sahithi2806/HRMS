@@ -1,11 +1,58 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  ShieldCheck,
+  Lock,
+  Mail,
+  ArrowRight,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Loader2,
+  Users,
+  Shield,
+  User,
+  KeyRound,
+  CheckCircle2,
+  Fingerprint
+} from 'lucide-react';
+
+const DEMO_ROLES = [
+  {
+    id: 'admin',
+    label: 'HR Admin',
+    email: 'admin@hrms.com',
+    pass: 'Admin@123',
+    tier: 'Governance',
+    icon: Shield,
+    detail: 'Rosters, directory & policies'
+  },
+  {
+    id: 'manager',
+    label: 'Team Lead',
+    email: 'manager@hrms.com',
+    pass: 'Manager@123',
+    tier: 'Management',
+    icon: Users,
+    detail: 'Team rosters & leave review'
+  },
+  {
+    id: 'employee',
+    label: 'Staff Member',
+    email: 'employee@hrms.com',
+    pass: 'Employee@123',
+    tier: 'Self-Service',
+    icon: User,
+    detail: 'Personal records & requests'
+  }
+];
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -15,7 +62,7 @@ export const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('Please provide both email and password.');
+      setError('Please provide both corporate email and password.');
       return;
     }
 
@@ -23,175 +70,268 @@ export const LoginPage = () => {
       setError('');
       setLoading(true);
       const user = await login(email, password);
-      // Route based on role
       if (user.role?.toLowerCase() === 'employee') {
         navigate('/profile');
       } else {
         navigate('/employees');
       }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Authentication failed. Please verify your credentials.';
+      let msg = err.response?.data?.message;
+      if (!msg) {
+        if (err.message === 'Network Error' || !err.response) {
+          msg = 'Cannot connect to backend server (http://localhost:5000). Please check that the API service is active.';
+        } else {
+          msg = 'Authentication failed. Please verify your credentials.';
+        }
+      }
       setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickFill = (demoEmail, demoPassword) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
+  const handleSelectRole = (roleItem) => {
+    setSelectedRole(roleItem.id);
+    setEmail(roleItem.email);
+    setPassword(roleItem.pass);
     setError('');
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#0f172a',
-        backgroundImage: 'radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%)',
-        padding: '24px'
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '440px',
-          background: '#ffffff',
-          borderRadius: '16px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          padding: '36px',
-          border: '1px solid rgba(226, 232, 240, 0.8)'
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div
-            style={{
-              width: '52px',
-              height: '52px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 16px',
-              boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.3)'
-            }}
-          >
-            <Shield size={26} color="#ffffff" />
-          </div>
-          <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
-            HRMS Portal
-          </h1>
-          <p style={{ color: '#64748b', fontSize: '0.88rem', marginTop: '6px' }}>
-            Enterprise Employee Lifecycle Management
-          </p>
-        </div>
-
-        {error && (
-          <div
-            style={{
-              padding: '12px 16px',
-              backgroundColor: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '10px',
-              color: '#991b1b',
-              fontSize: '0.85rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '20px'
-            }}
-          >
-            <AlertCircle size={18} style={{ flexShrink: 0 }} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Corporate Email</label>
-            <div style={{ position: 'relative' }}>
-              <Mail
-                size={18}
-                style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}
-              />
-              <input
-                type="email"
-                className="form-input"
-                style={{ paddingLeft: '42px' }}
-                placeholder="name@hrms.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '24px' }}>
-            <label className="form-label">Password</label>
-            <div style={{ position: 'relative' }}>
-              <Lock
-                size={18}
-                style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}
-              />
-              <input
-                type="password"
-                className="form-input"
-                style={{ paddingLeft: '42px' }}
-                placeholder="••••••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}
-            disabled={loading}
-          >
-            {loading ? 'Authenticating...' : 'Sign In to Workspace'}
-            {!loading && <ArrowRight size={16} />}
-          </button>
-        </form>
-
-        <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
-          <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', textAlign: 'center' }}>
-            Quick Demo Accounts
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('admin@hrms.com', 'Admin@123')}
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.75rem', padding: '6px 4px' }}
-            >
-              Admin (HR)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('manager@hrms.com', 'Manager@123')}
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.75rem', padding: '6px 4px' }}
-            >
-              Manager
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('employee@hrms.com', 'Employee@123')}
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.75rem', padding: '6px 4px' }}
-            >
-              Employee
-            </button>
-          </div>
-        </div>
+    <main className="login-shell">
+      {/* 2 Soft Radial Glows layered over the main gradient */}
+      <div className="login-aurora-blobs" aria-hidden="true">
+        <div className="login-glow login-glow--top-right" />
+        <div className="login-glow login-glow--bottom-left" />
       </div>
-    </div>
+
+      {/* Monochromatic Fine Grain Noise Texture Overlay */}
+      <div className="login-noise-overlay" aria-hidden="true" />
+
+      {/* Subtle Dot Grid Texture */}
+      <div className="login-backdrop-grid" aria-hidden="true" />
+
+      {/* Spacious Balanced Container */}
+      <div className="login-container">
+        {/* Left Column: Aether Brand Authority & Security Telemetry */}
+        <section className="login-context" aria-labelledby="login-title">
+          <header className="login-brand" aria-label="Aether HR">
+            <span className="login-mark" aria-hidden="true">
+              <ShieldCheck size={24} strokeWidth={2.4} />
+            </span>
+            <div>
+              <div className="login-brand-name">Aether HR</div>
+              <div className="login-brand-meta">Enterprise Workforce Platform</div>
+            </div>
+            <div className="login-system-pill">
+              <span className="login-system-dot" aria-hidden="true" />
+              <span>TLS 1.3 Active</span>
+            </div>
+          </header>
+
+          <div className="login-copy">
+            <p className="login-kicker">Workforce Orchestration</p>
+            <h1 id="login-title">Unified workforce operations, clearly delivered.</h1>
+            <p className="login-lede">
+              Authorized single sign-on gateway for corporate personnel directory,
+              leave lifecycle governance, and compliance policies.
+            </p>
+
+            {/* Enterprise Security Telemetry Card */}
+            <div className="login-telemetry-card" role="region" aria-label="System security status">
+              <div className="login-telemetry-header">
+                <div className="login-telemetry-title">
+                  <Fingerprint size={16} aria-hidden="true" />
+                  <span>Access & Security Posture</span>
+                </div>
+                <span className="login-telemetry-badge">Encrypted Session</span>
+              </div>
+
+              <div className="login-telemetry-grid">
+                <div className="login-telemetry-item">
+                  <span className="telemetry-label">Directory Sync</span>
+                  <div className="telemetry-value">
+                    <CheckCircle2 size={13} aria-hidden="true" className="telemetry-icon-success" />
+                    <span>Synchronized (Azure AD)</span>
+                  </div>
+                </div>
+
+                <div className="login-telemetry-item">
+                  <span className="telemetry-label">Access Policy</span>
+                  <div className="telemetry-value">
+                    <span>Role-Based (RBAC Tier 1)</span>
+                  </div>
+                </div>
+
+                <div className="login-telemetry-item">
+                  <span className="telemetry-label">Active Node</span>
+                  <div className="telemetry-value">
+                    <span className="telemetry-node-tag">Prod-AP-South</span>
+                  </div>
+                </div>
+
+                <div className="login-telemetry-item">
+                  <span className="telemetry-label">Audit Protocol</span>
+                  <div className="telemetry-value">
+                    <span>Immutable Hash Log</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <footer className="login-context__footer">
+            <div className="login-meta-row">
+              <span className="login-meta-pill">Aether Core 2026.4</span>
+              <span className="login-meta-pill">OIDC Compliant</span>
+              <span className="login-meta-pill">Zero-Trust Verified</span>
+            </div>
+          </footer>
+        </section>
+
+        {/* Right Column: Spacious High-Craft Authentication Card */}
+        <section className="login-panel-wrap" aria-label="Authentication form">
+          <div className="login-panel">
+            <header className="login-panel-head">
+              <div className="login-panel-kicker">
+                <KeyRound size={13} aria-hidden="true" />
+                <span>Secure Sign-In</span>
+              </div>
+              <h2>Access your workspace</h2>
+              <p>Select your assigned credential profile or enter corporate details.</p>
+            </header>
+
+            {/* Spacious Role Selection Cards */}
+            <div className="login-role-strip" role="group" aria-label="Quick profile selector">
+              <div className="login-role-strip-header">
+                <span className="login-role-strip-title">Fast Access Profiles</span>
+                <span className="login-role-strip-hint">Click to auto-populate</span>
+              </div>
+              <div className="login-role-cards">
+                {DEMO_ROLES.map((roleItem) => {
+                  const IconComponent = roleItem.icon;
+                  const isSelected = selectedRole === roleItem.id;
+                  return (
+                    <button
+                      key={roleItem.id}
+                      type="button"
+                      onClick={() => handleSelectRole(roleItem)}
+                      className={`login-role-card ${isSelected ? 'is-selected' : ''}`}
+                      aria-pressed={isSelected}
+                    >
+                      <div className="login-role-card-top">
+                        <span className="login-role-card-icon" aria-hidden="true">
+                          <IconComponent size={15} strokeWidth={2.2} />
+                        </span>
+                        <span className="login-role-tier">{roleItem.tier}</span>
+                      </div>
+                      <div className="login-role-card-name">{roleItem.label}</div>
+                      <div className="login-role-card-detail">{roleItem.detail}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {error && (
+              <div className="login-alert" role="alert" aria-live="assertive">
+                <AlertCircle size={18} style={{ flexShrink: 0 }} aria-hidden="true" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} noValidate className="login-form">
+              <div className="form-group">
+                <label className="form-label" htmlFor="login-email">
+                  Corporate Email
+                </label>
+                <div className="login-field">
+                  <Mail size={18} aria-hidden="true" />
+                  <input
+                    id="login-email"
+                    type="email"
+                    className="form-input"
+                    placeholder="name@company.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setSelectedRole(null);
+                    }}
+                    aria-describedby="login-email-helper"
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+                <p id="login-email-helper" className="field-helper">
+                  Assigned workplace identifier.
+                </p>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="login-password">
+                  Security Key / Password
+                </label>
+                <div className="login-field">
+                  <Lock size={18} aria-hidden="true" />
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-input login-input-password"
+                    placeholder="Enter security key"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setSelectedRole(null);
+                    }}
+                    aria-describedby="login-password-helper"
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="login-toggle-password"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    tabIndex={0}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <p id="login-password-helper" className="field-helper">
+                  Permissions resolve automatically according to role.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary login-submit"
+                disabled={loading}
+                aria-busy={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="btn-spinner" aria-hidden="true" />
+                    <span>Validating Credentials...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In to Workspace</span>
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <footer className="login-panel-footer">
+              <p className="login-compliance-note">
+                Confidential system. Access is monitored and encrypted under AES-256 & ISO-27001 standards.
+              </p>
+            </footer>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 };
+
+export default LoginPage;

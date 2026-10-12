@@ -96,4 +96,23 @@ public class JwtHelperTests
 
         Assert.Null(empIdClaim);
     }
+
+    [Theory]
+    [InlineData("PLACEHOLDER_SET_VIA_ENVIRONMENT_OR_USER_SECRETS")]
+    [InlineData("TooShortKey")]
+    [InlineData("")]
+    public void GenerateToken_WithInvalidOrPlaceholderKey_ThrowsInvalidOperationException(string badKey)
+    {
+        var inMemory = new Dictionary<string, string?>
+        {
+            {"Jwt:Key", badKey}
+        };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(inMemory).Build();
+        var helper = new JwtHelper(config);
+
+        var user = new User { UserID = 1, Name = "Test", Email = "test@hrms.local", Role = "Admin" };
+
+        var ex = Assert.Throws<InvalidOperationException>(() => helper.GenerateToken(user));
+        Assert.Contains("JWT Key not configured, left as placeholder, or insecure", ex.Message);
+    }
 }

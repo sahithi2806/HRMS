@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
-  User, Mail, Briefcase, Calendar, Shield, Award, 
-  CheckCircle, ArrowRight 
+  Briefcase, Calendar, Shield, Award, 
+  CheckCircle, ArrowRight, IndianRupee 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -27,6 +27,16 @@ export const ProfilePage = () => {
 
     fetchProfile();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="page-body">
+        <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          Loading profile...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-body">
@@ -99,6 +109,16 @@ export const ProfilePage = () => {
                 {profile?.joiningDate ? new Date(profile.joiningDate).toLocaleDateString() : 'N/A'}
               </strong>
             </div>
+
+            {profile?.salary != null && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.88rem' }}>
+                <IndianRupee size={16} color="#6366f1" />
+                <span style={{ color: 'var(--text-muted)' }}>Annual CTC:</span>
+                <strong style={{ marginLeft: 'auto', color: '#059669' }}>
+                  ₹{Number(profile.salary).toLocaleString('en-IN')}
+                </strong>
+              </div>
+            )}
           </div>
         </div>
 
