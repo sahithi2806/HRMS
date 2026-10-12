@@ -615,7 +615,7 @@ export const PortalPage = () => {
             </div>
             <div>
               <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 2px 0', color: '#0F172A' }}>Helpdesk Support</h3>
-              <span style={{ fontSize: '0.8rem', color: '#64748B' }}>IT, HR & facilities tickets</span>
+              <span style={{ fontSize: '0.8rem', color: '#64748B' }}>{summary?.OpenTicketsCount ?? 0} active tickets</span>
             </div>
           </div>
 

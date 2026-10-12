@@ -148,6 +148,14 @@ public class PortalRepository : IPortalRepository
             """;
         summary.MyAssetsCount = await connection.ExecuteScalarAsync<int>(myAssetsSql, new { EmployeeID = employeeId });
 
+        // 5b. Open Tickets Count
+        const string openTicketsSql = """
+            SELECT COUNT(1)
+            FROM Tickets
+            WHERE EmployeeID = @EmployeeID AND Status IN ('Open', 'InProgress');
+            """;
+        summary.OpenTicketsCount = await connection.ExecuteScalarAsync<int>(openTicketsSql, new { EmployeeID = employeeId });
+
         // 6. Pending Approvals Count (for Manager / Admin)
         if (role == "Manager")
         {

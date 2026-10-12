@@ -159,6 +159,35 @@ public static class DatabaseInitializer
                 FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID),
                 FOREIGN KEY (ReviewedBy) REFERENCES Employees(EmployeeID)
             );
+
+            CREATE TABLE IF NOT EXISTS Tickets (
+                TicketID INTEGER PRIMARY KEY AUTOINCREMENT,
+                EmployeeID INTEGER NOT NULL,
+                Category TEXT NOT NULL CHECK (Category IN ('IT', 'HR', 'Payroll', 'Facilities', 'Admin', 'Other')),
+                Subject TEXT NOT NULL,
+                Description TEXT NOT NULL,
+                Priority TEXT NOT NULL DEFAULT 'Medium' CHECK (Priority IN ('Low', 'Medium', 'High')),
+                Status TEXT NOT NULL DEFAULT 'Open' CHECK (Status IN ('Open', 'InProgress', 'Resolved', 'Closed')),
+                AssignedTo INTEGER NULL,
+                FeedbackRating INTEGER NULL CHECK (FeedbackRating IS NULL OR (FeedbackRating >= 1 AND FeedbackRating <= 5)),
+                FeedbackComment TEXT NULL,
+                CreatedAt TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+                UpdatedAt TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+                ResolvedAt TEXT NULL,
+                FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID),
+                FOREIGN KEY (AssignedTo) REFERENCES Employees(EmployeeID)
+            );
+
+            CREATE TABLE IF NOT EXISTS TicketComments (
+                CommentID INTEGER PRIMARY KEY AUTOINCREMENT,
+                TicketID INTEGER NOT NULL,
+                AuthorEmployeeID INTEGER NOT NULL,
+                Body TEXT NOT NULL,
+                IsInternal INTEGER NOT NULL DEFAULT 0,
+                CreatedAt TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+                FOREIGN KEY (TicketID) REFERENCES Tickets(TicketID),
+                FOREIGN KEY (AuthorEmployeeID) REFERENCES Employees(EmployeeID)
+            );
             """;
 
         connection.Execute(schemaSql);
@@ -414,5 +443,20 @@ public static class DatabaseInitializer
             (1, 3, 8, 'Repair', 'Screen flickering on HDMI port 2 after reboot', 'Pending', NULL, NULL, NULL, '2026-10-10 14:30:00');
             """;
         connection.Execute(seedAssetsSql);
+
+        // 10. Seed Helpdesk Tickets and Comments
+        const string seedTicketsSql = """
+            INSERT OR IGNORE INTO Tickets (TicketID, EmployeeID, Category, Subject, Description, Priority, Status, AssignedTo, FeedbackRating, FeedbackComment, CreatedAt, UpdatedAt, ResolvedAt) VALUES
+            (1, 8, 'IT', 'VPN access issue from home office', 'Cannot connect to Bangalore dev cluster gateway using GlobalProtect credentials.', 'High', 'InProgress', 1, NULL, NULL, '2026-10-09 10:00:00', '2026-10-09 11:30:00', NULL),
+            (2, 8, 'HR', 'Clarification on Mediclaim parental coverage', 'Need information on enrolling elderly parents in Group Health Insurance top-up plan.', 'Medium', 'Resolved', 1, 5, 'Super fast and detailed resolution by HR team!', '2026-10-05 09:30:00', '2026-10-06 14:00:00', '2026-10-06 14:00:00'),
+            (3, 9, 'Facilities', 'Ergonomic chair replacement', 'Height adjustment lever broken on desk 4B in Whitefield office.', 'Low', 'Open', NULL, NULL, NULL, '2026-10-10 12:00:00', '2026-10-10 12:00:00', NULL);
+
+            INSERT OR IGNORE INTO TicketComments (CommentID, TicketID, AuthorEmployeeID, Body, IsInternal, CreatedAt) VALUES
+            (1, 1, 8, 'Facing DNS resolution timeouts when connected to home WiFi router.', 0, '2026-10-09 10:15:00'),
+            (2, 1, 1, 'Checked Active Directory security group; reset radius auth profile.', 1, '2026-10-09 11:00:00'),
+            (3, 1, 1, 'Please restart your GlobalProtect client and verify connection again.', 0, '2026-10-09 11:30:00'),
+            (4, 2, 1, 'Shared policy document and premium matrix for parental top-up scheme.', 0, '2026-10-06 14:00:00');
+            """;
+        connection.Execute(seedTicketsSql);
     }
 }

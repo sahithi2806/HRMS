@@ -61,12 +61,13 @@ Sample- HRMS/
 │   │   │   ├── 02_SeedData.sql
 │   │   │   ├── 03_Hardening.sql    # Schema hardening, persisted computed columns, audit columns
 │   │   │   ├── 04_Attendance.sql   # Attendance & regularization tables, unique work-date indexes
-│   │   │   └── 05_Assets.sql       # Assets, assignments (filtered unique index), asset requests
+│   │   │   ├── 05_Assets.sql       # Assets, assignments (filtered unique index), asset requests
+│   │   │   └── 06_Helpdesk.sql     # Support tickets, category/priority checks, comments, feedback
 │   │   ├── Storage/                # Secure local document upload directory
 │   │   ├── appsettings.json        # Connection strings & configuration (placeholders for secrets)
 │   │   └── Program.cs              # Dependency injection, rate limiting, JWT validation & pipeline
 │   │
-│   ├── HrmsApi.Tests/              # xUnit + Moq unit test suite (77 tests)
+│   ├── HrmsApi.Tests/              # xUnit + Moq unit test suite (88 tests)
 │   └── HrmsApi.IntegrationTests/   # WebApplicationFactory integration tests (2 tests)
 │
 ├── frontend/
@@ -246,3 +247,23 @@ npm run build
    - End-to-end integration tests using `Microsoft.AspNetCore.Mvc.Testing` against isolated test database.
    - Validates double assignment prevention on open assignments via database index.
    - Validates concurrent leave approval race conditions (exactly one approval succeeds).
+
+---
+
+## 🎫 Helpdesk Support & Ticketing (v9)
+
+1. **State Machine & Transition Rules:**
+   - Formal transition workflow: `Open -> InProgress -> Resolved -> Closed`.
+   - Reopen permitted within a 7-day window from resolution (`Helpdesk:ReopenWindowDays`, default 7). Invalid transitions return HTTP 409 Conflict.
+
+2. **Internal Note Privacy & Security:**
+   - Support staff notes marked `IsInternal = true` are strictly isolated to `Admin`.
+   - Internal notes are completely filtered out from API responses for the ticket raiser and cannot be submitted by non-admin users.
+
+3. **Resolution Satisfaction Feedback:**
+   - 1–5 star ratings and comments are permitted only once per ticket, solely by the ticket raiser, and only when the ticket is in `Resolved` or `Closed` status.
+
+4. **Employee Self-Service & Admin Triage:**
+   - Employees view and track personal tickets (`/helpdesk`), submit new requests, reply to threads (`/helpdesk/:id`), close resolved tickets, and rate support quality.
+   - Admins oversee all organizational tickets, filter by department/category/priority/status, assign staff owners, and update ticket progress.
+

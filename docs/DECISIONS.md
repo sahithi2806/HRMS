@@ -32,8 +32,23 @@ This document records architectural, engineering, and design decisions made whil
   - Double assignment prevention via filtered unique index (409 Conflict).
   - Concurrent leave approvals (simultaneous approvals result in exactly one success).
 
+### v9 — Helpdesk
+- **Explicit Status Transition Table (Decision #7)**:
+  - `Open -> InProgress -> Resolved -> Closed`.
+  - Allowed transitions: `Open -> InProgress, Closed`; `InProgress -> Resolved, Closed`; `Resolved -> Closed, Open`; `Closed -> Open`.
+  - Any invalid transition attempt throws HTTP 409 Conflict.
+- **Reopen Window Enforcement**:
+  - Reopening a ticket (`Resolved` or `Closed` -> `Open`) is restricted to 7 days (`Helpdesk:ReopenWindowDays`, default 7) from `ResolvedAt` / `UpdatedAt`. Attempting to reopen past 7 days yields HTTP 409 Conflict.
+- **Admin-Only Internal Comments Isolation**:
+  - Staff notes marked `IsInternal = true` are strictly Admin-only. Non-admins cannot author internal notes (403), and internal notes are filtered out and completely omitted from `GET /api/tickets/{id}` responses for employee requesters.
+- **Single Satisfaction Feedback Post-Resolution**:
+  - Rating (1–5 stars) and optional feedback comments can only be submitted once, exclusively by the employee who raised the ticket, and strictly after the ticket is in `Resolved` or `Closed` state. Submitting while in `Open`/`InProgress` or rating twice yields HTTP 409 Conflict.
+- **Administrative Triage Governance**:
+  - Only Admins can reassign tickets or adjust priorities/statuses via `PATCH /api/tickets/{id}`. Non-admin calls are forbidden (403). Employees can only view their own tickets (`GET /api/tickets`).
+
 ## Future Scope (Deferred)
 - Goals and OKR tracking.
 - Payroll generation and tax deductions.
 - Multi-channel push/email notification queues.
 - Helpdesk file attachments.
+

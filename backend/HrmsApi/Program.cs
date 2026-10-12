@@ -40,6 +40,7 @@ builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 builder.Services.AddScoped<IAttendanceRegularizationRepository, AttendanceRegularizationRepository>();
 builder.Services.AddScoped<IPortalRepository, PortalRepository>();
 builder.Services.AddScoped<IAssetRepository, AssetRepository>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 
 // 5. Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -50,6 +51,7 @@ builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IAttendanceRegularizationService, AttendanceRegularizationService>();
 builder.Services.AddScoped<IPortalService, PortalService>();
 builder.Services.AddScoped<IAssetService, AssetService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
 
 // 6. Fail-fast JWT Secret Key Validation & Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");

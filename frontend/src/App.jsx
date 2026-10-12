@@ -13,6 +13,8 @@ import { PortalPage } from './pages/PortalPage';
 import { AttendancePage } from './pages/AttendancePage';
 import { AssetsPage } from './pages/AssetsPage';
 import { MyAssetsPage } from './pages/MyAssetsPage';
+import { TicketsPage } from './pages/TicketsPage';
+import { TicketDetailPage } from './pages/TicketDetailPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const AppLayout = ({ children }) => {
@@ -120,6 +122,30 @@ export const App = () => {
           <ProtectedRoute>
             <AppLayout>
               <MyAssetsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Helpdesk Support (All users) */}
+      <Route
+        path="/helpdesk"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <TicketsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Helpdesk Ticket Detail Thread */}
+      <Route
+        path="/helpdesk/:id"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <TicketDetailPage />
             </AppLayout>
           </ProtectedRoute>
         }

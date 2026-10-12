@@ -239,3 +239,73 @@ Content-Type: application/json
 POST {{HrmsApi_HostAddress}}/api/assets/1/unassign
 Authorization: Bearer {{adminToken}}
 
+### 33. List Tickets (Employee gets own, Admin gets all)
+GET {{HrmsApi_HostAddress}}/api/tickets
+Authorization: Bearer {{employeeToken}}
+
+### 34. Get Ticket by ID with Thread Comments
+GET {{HrmsApi_HostAddress}}/api/tickets/1
+Authorization: Bearer {{employeeToken}}
+
+### 35. Submit New Ticket (Employee)
+POST {{HrmsApi_HostAddress}}/api/tickets
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "category": "IT",
+  "priority": "High",
+  "subject": "Dual monitor display flicker on docking station",
+  "description": "Connecting via CalDigit Thunderbolt dock causes secondary display to disconnect every 10 minutes."
+}
+
+### 36. Add Public Comment (Employee / Admin)
+POST {{HrmsApi_HostAddress}}/api/tickets/1/comments
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "body": "Replaced the HDMI cable with a certified DisplayPort 1.4 cable, issue still persists.",
+  "isInternal": false
+}
+
+### 37. Add Admin Internal Staff Note (Admin Only)
+POST {{HrmsApi_HostAddress}}/api/tickets/1/comments
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "body": "Known issue with dock firmware v2.1. Escalated ticket to IT procurement for dock replacement.",
+  "isInternal": true
+}
+
+### 38. Admin Update Ticket (Status to InProgress, Assign to Admin)
+PATCH {{HrmsApi_HostAddress}}/api/tickets/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "InProgress",
+  "assignedTo": 1,
+  "priority": "High"
+}
+
+### 39. Close Ticket (Employee or Admin)
+PUT {{HrmsApi_HostAddress}}/api/tickets/2/close
+Authorization: Bearer {{employeeToken}}
+
+### 40. Reopen Ticket (Within 7-day window)
+PUT {{HrmsApi_HostAddress}}/api/tickets/2/reopen
+Authorization: Bearer {{employeeToken}}
+
+### 41. Submit Resolution Feedback Rating (Employee, 1-5 Stars)
+POST {{HrmsApi_HostAddress}}/api/tickets/2/feedback
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Quick and courteous resolution by the support team!"
+}
+
+
