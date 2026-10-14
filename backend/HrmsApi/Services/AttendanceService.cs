@@ -117,11 +117,16 @@ public class AttendanceService : IAttendanceService
         double totalHours = 0.0;
         if (checkIn.HasValue && checkOut.HasValue)
         {
-            totalHours = Math.Round((checkOut.Value - checkIn.Value).TotalHours, 1);
+            totalHours = Math.Round(Math.Max(0, (checkOut.Value - checkIn.Value).TotalHours), 1);
         }
         else if (checkIn.HasValue)
         {
-            totalHours = Math.Round((DateTime.UtcNow - checkIn.Value).TotalHours, 1);
+            var diff = (DateTime.UtcNow - checkIn.Value).TotalHours;
+            if (diff < 0)
+            {
+                diff = (localNow - checkIn.Value).TotalHours;
+            }
+            totalHours = Math.Round(Math.Max(0, diff), 1);
         }
 
         return new TodayAttendanceDto
@@ -258,11 +263,16 @@ public class AttendanceService : IAttendanceService
         {
             if (item.CheckInAt.HasValue && item.CheckOutAt.HasValue)
             {
-                item.TotalHours = Math.Round((item.CheckOutAt.Value - item.CheckInAt.Value).TotalHours, 1);
+                item.TotalHours = Math.Round(Math.Max(0, (item.CheckOutAt.Value - item.CheckInAt.Value).TotalHours), 1);
             }
             else if (item.CheckInAt.HasValue)
             {
-                item.TotalHours = Math.Round((DateTime.UtcNow - item.CheckInAt.Value).TotalHours, 1);
+                var diff = (DateTime.UtcNow - item.CheckInAt.Value).TotalHours;
+                if (diff < 0)
+                {
+                    diff = (localNow - item.CheckInAt.Value).TotalHours;
+                }
+                item.TotalHours = Math.Round(Math.Max(0, diff), 1);
             }
         }
 

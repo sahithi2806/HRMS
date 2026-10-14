@@ -15,8 +15,8 @@ const CATEGORY_ICONS = {
 };
 
 const STATUS_BADGES = {
-  Available: { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' },
-  Assigned: { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' },
+  Available: { bg: '#F4ECE1', text: 'var(--color-ink)', border: 'var(--color-rule)' },
+  Assigned: { bg: 'var(--color-accent-soft)', text: 'var(--color-accent)', border: '#B8D6BF' },
   UnderRepair: { bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' },
   Retired: { bg: '#F1F5F9', text: '#64748B', border: '#CBD5E1' }
 };
@@ -105,11 +105,11 @@ export const AssetsPage = () => {
     setSavingAsset(true);
     try {
       await assetService.createAsset({
-        assetTag,
-        name,
-        category,
-        serialNumber: serialNumber || null,
-        purchaseDate: purchaseDate || null
+        AssetTag: assetTag,
+        Name: name,
+        Category: category,
+        SerialNumber: serialNumber || null,
+        PurchaseDate: purchaseDate || null
       });
       showToast('success', `Asset ${assetTag} added successfully.`);
       setAddModalOpen(false);
@@ -129,10 +129,12 @@ export const AssetsPage = () => {
   const handleAssign = async (e) => {
     e.preventDefault();
     if (!selectedAsset || !selectedEmployeeId) return;
+    const assetId = selectedAsset.assetID ?? selectedAsset.assetId ?? selectedAsset.AssetID;
+    const assetTag = selectedAsset.assetTag || selectedAsset.AssetTag;
     setAssigning(true);
     try {
-      await assetService.assignAsset(selectedAsset.AssetID, parseInt(selectedEmployeeId, 10));
-      showToast('success', `Asset ${selectedAsset.AssetTag} assigned successfully.`);
+      await assetService.assignAsset(assetId, parseInt(selectedEmployeeId, 10));
+      showToast('success', `Asset ${assetTag} assigned successfully.`);
       setAssignModalOpen(false);
       setSelectedAsset(null);
       setSelectedEmployeeId('');
@@ -146,10 +148,13 @@ export const AssetsPage = () => {
   };
 
   const handleUnassign = async (asset) => {
-    if (!window.confirm(`Unassign and return ${asset.AssetTag} (${asset.Name}) to available inventory?`)) return;
+    const assetId = asset.assetID ?? asset.assetId ?? asset.AssetID;
+    const assetTag = asset.assetTag || asset.AssetTag;
+    const name = asset.name || asset.Name;
+    if (!window.confirm(`Unassign and return ${assetTag} (${name}) to available inventory?`)) return;
     try {
-      await assetService.unassignAsset(asset.AssetID);
-      showToast('success', `Asset ${asset.AssetTag} unassigned.`);
+      await assetService.unassignAsset(assetId);
+      showToast('success', `Asset ${assetTag} unassigned.`);
       loadAssets();
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to unassign asset.';
@@ -158,8 +163,9 @@ export const AssetsPage = () => {
   };
 
   const handleStatusChange = async (asset, newStatus) => {
+    const assetId = asset.assetID ?? asset.assetId ?? asset.AssetID;
     try {
-      await assetService.updateStatus(asset.AssetID, newStatus);
+      await assetService.updateStatus(assetId, newStatus);
       showToast('success', `Asset status updated to ${newStatus}.`);
       loadAssets();
     } catch (err) {
@@ -194,15 +200,16 @@ export const AssetsPage = () => {
   const filteredAssets = assets.filter((a) => {
     if (!search) return true;
     const term = search.toLowerCase();
-    return a.AssetTag.toLowerCase().includes(term) ||
-           a.Name.toLowerCase().includes(term) ||
-           (a.AssignedToEmployeeName && a.AssignedToEmployeeName.toLowerCase().includes(term));
+    const tag = (a.assetTag || a.AssetTag || '').toLowerCase();
+    const name = (a.name || a.Name || '').toLowerCase();
+    const assigned = (a.assignedToEmployeeName || a.AssignedToEmployeeName || '').toLowerCase();
+    return tag.includes(term) || name.includes(term) || assigned.includes(term);
   });
 
   const totalCount = assets.length;
-  const assignedCount = assets.filter(a => a.Status === 'Assigned').length;
-  const availableCount = assets.filter(a => a.Status === 'Available').length;
-  const repairCount = assets.filter(a => a.Status === 'UnderRepair').length;
+  const assignedCount = assets.filter(a => (a.status || a.Status) === 'Assigned').length;
+  const availableCount = assets.filter(a => (a.status || a.Status) === 'Available').length;
+  const repairCount = assets.filter(a => (a.status || a.Status) === 'UnderRepair').length;
 
   return (
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
@@ -254,8 +261,8 @@ export const AssetsPage = () => {
                 fontSize: '0.85rem',
                 cursor: 'pointer',
                 background: activeTab === 'inventory' ? '#FFFFFF' : 'transparent',
-                color: activeTab === 'inventory' ? '#0047AB' : '#64748B',
-                boxShadow: activeTab === 'inventory' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                color: activeTab === 'inventory' ? 'var(--color-accent)' : 'var(--color-ink-muted)',
+                boxShadow: activeTab === 'inventory' ? 'var(--shadow-warm-sm)' : 'none'
               }}
             >
               Inventory ({totalCount})
@@ -270,8 +277,8 @@ export const AssetsPage = () => {
                 fontSize: '0.85rem',
                 cursor: 'pointer',
                 background: activeTab === 'requests' ? '#FFFFFF' : 'transparent',
-                color: activeTab === 'requests' ? '#0047AB' : '#64748B',
-                boxShadow: activeTab === 'requests' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                color: activeTab === 'requests' ? 'var(--color-accent)' : 'var(--color-ink-muted)',
+                boxShadow: activeTab === 'requests' ? 'var(--shadow-warm-sm)' : 'none'
               }}
             >
               Requests
@@ -286,14 +293,14 @@ export const AssetsPage = () => {
                 alignItems: 'center',
                 gap: '8px',
                 padding: '10px 18px',
-                borderRadius: '10px',
+                borderRadius: 'var(--radius-sm)',
                 border: 'none',
-                background: '#0047AB',
+                background: 'var(--color-accent)',
                 color: '#FFFFFF',
                 fontWeight: 600,
                 fontSize: '0.88rem',
                 cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(0,71,171,0.25)'
+                boxShadow: '0 4px 12px rgba(30,77,43,0.25)'
               }}
             >
               <Plus size={18} /> Add Asset
@@ -305,21 +312,21 @@ export const AssetsPage = () => {
       {/* Metric Tiles (Inventory View) */}
       {activeTab === 'inventory' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
-            <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>Total Assets</span>
-            <span style={{ display: 'block', fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>{totalCount}</span>
+          <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '14px', border: '1px solid var(--color-rule)', boxShadow: 'var(--shadow-warm-sm)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)', fontWeight: 600 }}>Total Assets</span>
+            <span style={{ display: 'block', fontSize: '1.75rem', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-ink)', marginTop: '4px', fontVariantNumeric: 'tabular-nums' }}>{totalCount}</span>
           </div>
-          <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
-            <span style={{ fontSize: '0.8rem', color: '#2563EB', fontWeight: 600 }}>Assigned</span>
-            <span style={{ display: 'block', fontSize: '1.75rem', fontWeight: 800, color: '#2563EB', marginTop: '4px' }}>{assignedCount}</span>
+          <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '14px', border: '1px solid var(--color-rule)', boxShadow: 'var(--shadow-warm-sm)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--color-accent)', fontWeight: 600 }}>Assigned</span>
+            <span style={{ display: 'block', fontSize: '1.75rem', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-accent)', marginTop: '4px', fontVariantNumeric: 'tabular-nums' }}>{assignedCount}</span>
           </div>
-          <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
-            <span style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 600 }}>Available</span>
-            <span style={{ display: 'block', fontSize: '1.75rem', fontWeight: 800, color: '#059669', marginTop: '4px' }}>{availableCount}</span>
+          <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '14px', border: '1px solid var(--color-rule)', boxShadow: 'var(--shadow-warm-sm)' }}>
+            <span style={{ fontSize: '0.8rem', color: '#16A34A', fontWeight: 600 }}>Available</span>
+            <span style={{ display: 'block', fontSize: '1.75rem', fontFamily: 'var(--font-display)', fontWeight: 700, color: '#16A34A', marginTop: '4px', fontVariantNumeric: 'tabular-nums' }}>{availableCount}</span>
           </div>
-          <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
+          <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '14px', border: '1px solid var(--color-rule)', boxShadow: 'var(--shadow-warm-sm)' }}>
             <span style={{ fontSize: '0.8rem', color: '#D97706', fontWeight: 600 }}>Under Repair</span>
-            <span style={{ display: 'block', fontSize: '1.75rem', fontWeight: 800, color: '#D97706', marginTop: '4px' }}>{repairCount}</span>
+            <span style={{ display: 'block', fontSize: '1.75rem', fontFamily: 'var(--font-display)', fontWeight: 700, color: '#D97706', marginTop: '4px', fontVariantNumeric: 'tabular-nums' }}>{repairCount}</span>
           </div>
         </div>
       )}
@@ -394,27 +401,35 @@ export const AssetsPage = () => {
                   </tr>
                 ) : (
                   filteredAssets.map((asset) => {
-                    const badge = STATUS_BADGES[asset.Status] || STATUS_BADGES.Available;
-                    const IconComp = CATEGORY_ICONS[asset.Category] || Box;
+                    const assetId = asset.assetID ?? asset.assetId ?? asset.AssetID;
+                    const status = asset.status || asset.Status;
+                    const category = asset.category || asset.Category;
+                    const assetTag = asset.assetTag || asset.AssetTag;
+                    const name = asset.name || asset.Name;
+                    const serialNumber = asset.serialNumber || asset.SerialNumber;
+                    const assignedName = asset.assignedToEmployeeName || asset.AssignedToEmployeeName;
+                    const assignedDept = asset.assignedToDepartment || asset.AssignedToDepartment;
+                    const badge = STATUS_BADGES[status] || STATUS_BADGES.Available;
+                    const IconComp = CATEGORY_ICONS[category] || Box;
 
                     return (
-                      <tr key={asset.AssetID} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <tr key={assetId} style={{ borderBottom: '1px solid #F1F5F9' }}>
                         <td style={{ padding: '14px 20px', fontWeight: 700, fontFamily: 'monospace', color: '#0F172A' }}>
-                          {asset.AssetTag}
+                          {assetTag}
                         </td>
                         <td style={{ padding: '14px 20px', fontWeight: 600, color: '#1E293B' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <IconComp size={16} style={{ color: '#0047AB' }} />
-                            <span>{asset.Name}</span>
+                            <IconComp size={16} style={{ color: 'var(--color-accent)' }} />
+                            <span>{name}</span>
                           </div>
-                          {asset.SerialNumber && (
+                          {serialNumber && (
                             <span style={{ display: 'block', fontSize: '0.75rem', color: '#94A3B8', fontFamily: 'monospace' }}>
-                              S/N: {asset.SerialNumber}
+                              S/N: {serialNumber}
                             </span>
                           )}
                         </td>
                         <td style={{ padding: '14px 20px', color: '#475569' }}>
-                          {asset.Category}
+                          {category}
                         </td>
                         <td style={{ padding: '14px 20px' }}>
                           <span style={{
@@ -427,14 +442,14 @@ export const AssetsPage = () => {
                             color: badge.text,
                             border: `1px solid ${badge.border}`
                           }}>
-                            {asset.Status}
+                            {status}
                           </span>
                         </td>
                         <td style={{ padding: '14px 20px' }}>
-                          {asset.AssignedToEmployeeName ? (
+                          {assignedName ? (
                             <div>
-                              <span style={{ fontWeight: 600, color: '#0F172A' }}>{asset.AssignedToEmployeeName}</span>
-                              <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B' }}>{asset.AssignedToDepartment}</span>
+                              <span style={{ fontWeight: 600, color: '#0F172A' }}>{assignedName}</span>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B' }}>{assignedDept}</span>
                             </div>
                           ) : (
                             <span style={{ color: '#94A3B8' }}>In Inventory</span>
@@ -442,7 +457,7 @@ export const AssetsPage = () => {
                         </td>
                         <td style={{ padding: '14px 20px', textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                            {asset.Status === 'Available' && (
+                            {status === 'Available' && (
                               <button
                                 onClick={() => {
                                   setSelectedAsset(asset);
@@ -453,7 +468,7 @@ export const AssetsPage = () => {
                                   padding: '5px 10px',
                                   borderRadius: '6px',
                                   border: 'none',
-                                  background: '#0047AB',
+                                  background: 'var(--color-accent)',
                                   color: '#FFFFFF',
                                   fontSize: '0.75rem',
                                   fontWeight: 600,
@@ -464,7 +479,7 @@ export const AssetsPage = () => {
                               </button>
                             )}
 
-                            {asset.Status === 'Assigned' && (
+                            {status === 'Assigned' && (
                               <button
                                 onClick={() => handleUnassign(asset)}
                                 style={{
@@ -482,7 +497,7 @@ export const AssetsPage = () => {
                               </button>
                             )}
 
-                            {asset.Status === 'UnderRepair' && (
+                            {status === 'UnderRepair' && (
                               <button
                                 onClick={() => handleStatusChange(asset, 'Available')}
                                 style={{
@@ -501,7 +516,7 @@ export const AssetsPage = () => {
                             )}
 
                             <select
-                              value={asset.Status}
+                              value={status}
                               onChange={(e) => handleStatusChange(asset, e.target.value)}
                               style={{
                                 padding: '4px 8px',
@@ -560,16 +575,25 @@ export const AssetsPage = () => {
                   </tr>
                 ) : (
                   requests.map((r) => {
-                    const isPending = r.Status === 'Pending';
+                    const reqId = r.assetRequestID ?? r.assetRequestId ?? r.AssetRequestID;
+                    const status = r.status || r.Status;
+                    const isPending = status === 'Pending';
+                    const empName = r.employeeName || r.EmployeeName;
+                    const dept = r.department || r.Department;
+                    const assetTag = r.assetTag || r.AssetTag;
+                    const assetName = r.assetName || r.AssetName;
+                    const reqType = r.requestType || r.RequestType;
+                    const desc = r.description || r.Description;
+
                     return (
-                      <tr key={r.AssetRequestID} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <tr key={reqId} style={{ borderBottom: '1px solid #F1F5F9' }}>
                         <td style={{ padding: '14px 20px', fontWeight: 600, color: '#0F172A' }}>
-                          {r.EmployeeName}
-                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B', fontWeight: 400 }}>{r.Department}</span>
+                          {empName}
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B', fontWeight: 400 }}>{dept}</span>
                         </td>
                         <td style={{ padding: '14px 20px', color: '#1E293B' }}>
-                          <strong>{r.AssetTag}</strong>
-                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B' }}>{r.AssetName}</span>
+                          <strong>{assetTag}</strong>
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B' }}>{assetName}</span>
                         </td>
                         <td style={{ padding: '14px 20px' }}>
                           <span style={{
@@ -577,14 +601,14 @@ export const AssetsPage = () => {
                             borderRadius: '999px',
                             fontSize: '0.75rem',
                             fontWeight: 700,
-                            background: r.RequestType === 'Repair' ? '#FEF3C7' : '#EFF6FF',
-                            color: r.RequestType === 'Repair' ? '#D97706' : '#2563EB'
+                            background: reqType === 'Repair' ? '#FEF3C7' : '#EFF6FF',
+                            color: reqType === 'Repair' ? '#D97706' : '#2563EB'
                           }}>
-                            {r.RequestType}
+                            {reqType}
                           </span>
                         </td>
                         <td style={{ padding: '14px 20px', color: '#475569', maxWidth: '300px' }}>
-                          {r.Description}
+                          {desc}
                         </td>
                         <td style={{ padding: '14px 20px' }}>
                           <span style={{
@@ -592,14 +616,14 @@ export const AssetsPage = () => {
                             borderRadius: '999px',
                             fontSize: '0.75rem',
                             fontWeight: 700,
-                            background: r.Status === 'Approved' ? '#ECFDF5' :
-                                        r.Status === 'Rejected' ? '#FEF2F2' :
-                                        r.Status === 'Cancelled' ? '#F1F5F9' : '#FFFBEB',
-                            color: r.Status === 'Approved' ? '#059669' :
-                                   r.Status === 'Rejected' ? '#DC2626' :
-                                   r.Status === 'Cancelled' ? '#64748B' : '#D97706'
+                            background: status === 'Approved' ? '#ECFDF5' :
+                                        status === 'Rejected' ? '#FEF2F2' :
+                                        status === 'Cancelled' ? '#F1F5F9' : '#FFFBEB',
+                            color: status === 'Approved' ? '#059669' :
+                                   status === 'Rejected' ? '#DC2626' :
+                                   status === 'Cancelled' ? '#64748B' : '#D97706'
                           }}>
-                            {r.Status}
+                            {status}
                           </span>
                         </td>
                         <td style={{ padding: '14px 20px', textAlign: 'right' }}>
@@ -607,7 +631,7 @@ export const AssetsPage = () => {
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                               <button
                                 onClick={() => {
-                                  setSelectedRequest({ id: r.AssetRequestID, action: 'approve' });
+                                  setSelectedRequest({ id: reqId, action: 'approve' });
                                   setReviewComment('');
                                   setReviewModalOpen(true);
                                 }}
@@ -626,7 +650,7 @@ export const AssetsPage = () => {
                               </button>
                               <button
                                 onClick={() => {
-                                  setSelectedRequest({ id: r.AssetRequestID, action: 'reject' });
+                                  setSelectedRequest({ id: reqId, action: 'reject' });
                                   setReviewComment('');
                                   setReviewModalOpen(true);
                                 }}
@@ -762,7 +786,7 @@ export const AssetsPage = () => {
                 <button
                   type="submit"
                   disabled={savingAsset}
-                  style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', background: '#0047AB', color: '#FFFFFF', fontWeight: 600, cursor: 'pointer' }}
+                  style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-accent)', color: '#FFFFFF', fontWeight: 600, cursor: 'pointer' }}
                 >
                   {savingAsset ? 'Saving...' : 'Add Asset'}
                 </button>
@@ -786,10 +810,10 @@ export const AssetsPage = () => {
         }}>
           <div style={{ background: '#FFFFFF', borderRadius: '16px', width: '100%', maxWidth: '440px', padding: '28px' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 8px 0', color: '#0F172A' }}>
-              Assign Asset: {selectedAsset.AssetTag}
+              Assign Asset: {selectedAsset.assetTag || selectedAsset.AssetTag}
             </h3>
             <p style={{ margin: '0 0 18px 0', color: '#64748B', fontSize: '0.88rem' }}>
-              {selectedAsset.Name} ({selectedAsset.Category})
+              {selectedAsset.name || selectedAsset.Name} ({selectedAsset.category || selectedAsset.Category})
             </p>
 
             <form onSubmit={handleAssign}>
@@ -804,11 +828,17 @@ export const AssetsPage = () => {
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem' }}
                 >
                   <option value="">Select Active Employee...</option>
-                  {employees.map((emp) => (
-                    <option key={emp.employeeID} value={emp.employeeID}>
-                      {emp.name} ({emp.department} - {emp.position})
-                    </option>
-                  ))}
+                  {employees.map((emp) => {
+                    const empId = emp.employeeID ?? emp.employeeId ?? emp.EmployeeID;
+                    const empName = emp.name || emp.Name;
+                    const dept = emp.department || emp.Department;
+                    const pos = emp.position || emp.Position;
+                    return (
+                      <option key={empId} value={empId}>
+                        {empName} ({dept} - {pos})
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
@@ -823,7 +853,7 @@ export const AssetsPage = () => {
                 <button
                   type="submit"
                   disabled={assigning}
-                  style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', background: '#0047AB', color: '#FFFFFF', fontWeight: 600, cursor: 'pointer' }}
+                  style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-accent)', color: '#FFFFFF', fontWeight: 600, cursor: 'pointer' }}
                 >
                   {assigning ? 'Assigning...' : 'Confirm Assignment'}
                 </button>

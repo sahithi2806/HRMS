@@ -1,12 +1,12 @@
-/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 */
-/* Hallmark · genre: modern-minimal · macrostructure: app-auth · theme: Cobalt · contrast: pass (40-41) · mobile: pass (34, 49, 50-57) */
+/* Atelier & Warm Humanism Design Tokens */
+/* Grounded in Danish Humane Functionalism + Swiss Grid Discipline */
 
 :root {
   /* ==========================================================================
-     1. TYPOGRAPHY SCALE (2+1 Rule: Space Grotesk + Inter + JetBrains Mono)
+     1. TYPOGRAPHY SCALE (Fraunces + Plus Jakarta Sans + JetBrains Mono)
      ========================================================================== */
-  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-sans: var(--font-body);
 
@@ -17,16 +17,16 @@
   --text-lg: 1.25rem;     /* 20px */
   --text-xl: 1.5rem;      /* 24px */
   --text-2xl: 1.875rem;   /* 30px */
-  --text-3xl: 2.5rem;     /* 40px */
-  --text-4xl: 3.25rem;    /* 52px */
+  --text-3xl: 2.25rem;    /* 36px */
+  --text-4xl: 3rem;       /* 48px */
 
-  --lh-tight: 1.05;
-  --lh-snug: 1.25;
+  --lh-tight: 1.1;
+  --lh-snug: 1.28;
   --lh-normal: 1.5;
   --lh-relaxed: 1.65;
 
   /* ==========================================================================
-     2. SPACING SCALE (Strict 4pt Geometric Scale)
+     2. SPACING SCALE (Strict 8px/16px Swiss Modular Scale)
      ========================================================================== */
   --space-3xs: 0.25rem;   /* 4px */
   --space-2xs: 0.5rem;    /* 8px */
@@ -40,143 +40,105 @@
   --space-4xl: 4rem;      /* 64px */
 
   /* ==========================================================================
-     3. COLOR SYSTEM (Continuous Dark Cobalt Register)
-     Centralized Theme Tokens:
+     3. COLOR SYSTEM (Warm Ivory, Forest Green, Sage & Warm Espresso)
      ========================================================================== */
-  --bg-deep: #040A22;
-  --bg-navy: #0A1A5C;
-  --cobalt: #0047AB;
-  --cobalt-lit: #2563EB;
-  --cobalt-text: #7AA2FF;   /* accessible light cobalt for small accent text on dark */
-  --ink-on-dark: #F5F8FF;
-  --ink-muted: #A9B8E8;
-
-  /* Derived Theme Variables for Glass Surfaces, Borders & Shadows */
-  --card-white-bg: #FFFFFF;
-  --card-white-border: rgba(255, 255, 255, 0.90);
-  --dark-glass-bg: rgba(4, 10, 34, 0.60);
-  --dark-glass-border: rgba(122, 162, 255, 0.18);
-  --dark-chip-bg: rgba(10, 26, 92, 0.45);
-  --dark-chip-border: rgba(122, 162, 255, 0.22);
-  --shadow-card-ambient: 0 24px 64px -12px rgba(4, 10, 34, 0.65);
-  --shadow-card-glow: 0 12px 32px -4px rgba(0, 71, 171, 0.35);
-  --shadow-logo-glow: 0 0 20px rgba(37, 99, 235, 0.35), 0 0 0 1px rgba(122, 162, 255, 0.25);
-
-  /* Top Bar Gradient Line (var(--bg-deep) to var(--cobalt-lit)) */
-  --gradient-top-bar: linear-gradient(90deg, var(--bg-deep) 0%, var(--cobalt) 45%, var(--cobalt-lit) 100%);
-
-  /* Core Design Tokens Aliased to Centralized Palette */
-  --color-paper: #F4F7FB;
-  --color-paper-2: #EAEFF6;
-  --color-paper-3: #E2E8F0;
-  --color-surface: #FFFFFF;
+  --color-paper: #FBF9F5;       /* Warm Ivory Canvas */
+  --color-paper-2: #F4EFEA;     /* Warm Linen Secondary */
+  --color-paper-3: #EAE4DC;     /* Muted Warm Stone */
+  --color-surface: #FFFFFF;     /* Raised Card White */
   --color-surface-raised: #FFFFFF;
+  --color-surface-hover: #F8F5EE;
 
-  /* Inks & Text (High APCA & WCAG contrast against surfaces) */
-  --color-ink: #0A1128;
-  --color-ink-2: #1E293B;
-  --color-muted: #475569;
-  --color-muted-2: #64748B;
+  /* Inks & Text (High Legibility Warm Espresso & Umber) */
+  --color-ink: #1C1917;         /* Deep Espresso */
+  --color-ink-2: #292524;       /* Deep Umber */
+  --color-muted: #57534E;       /* Mid Warm Slate */
+  --color-muted-2: #78716C;     /* Soft Stone Muted */
 
   /* Hairlines, Rules & Dividers */
-  --color-rule: #E2E8F0;
-  --color-rule-2: #CBD5E1;
+  --color-rule: #E7E1D8;        /* Architectural Hairline */
+  --color-rule-2: #D6CEC2;      /* Defined Border */
   --rule-hairline: 1px solid var(--color-rule);
 
-  /* Primary Signal Accent: Engineered Cobalt */
-  --color-accent: var(--cobalt);
-  --color-accent-hover: var(--bg-navy);
-  --color-accent-soft: rgba(37, 99, 235, 0.12);
+  /* Primary Signal Accent: Deep Forest Green */
+  --color-accent: #1E4D2B;
+  --color-accent-hover: #163A20;
+  --color-accent-soft: #EAF2EC;  /* Nordic Sage Tint */
   --color-accent-ink: #FFFFFF;
-  --color-focus: var(--cobalt-lit);
+  --color-focus: #2A673B;
+
+  /* Derived Secondary Accent: Warm Terracotta for Notices */
+  --color-terracotta: #9A3412;
+  --color-terracotta-soft: #FFEDD5;
+
+  /* Derived Glass Surfaces & Elevations */
+  --shadow-subtle: 0 1px 3px rgba(28, 25, 23, 0.04);
+  --shadow-card: 0 4px 20px -2px rgba(28, 25, 23, 0.05), 0 2px 6px -1px rgba(28, 25, 23, 0.03);
+  --shadow-floating: 0 12px 32px -4px rgba(28, 25, 23, 0.08), 0 4px 12px -2px rgba(28, 25, 23, 0.04);
+
+  /* Control Heights & Border Radius */
+  --control-height: 40px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-button: 180ms cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ==========================================================================
-     4. STATUS & SEMANTIC TOKENS (Multi-channel differentiation)
-     Leave Statuses: Approved (Emerald), Pending (Amber), Rejected (Crimson)
+     4. STATUS & SEMANTIC TOKENS
      ========================================================================== */
-  /* Approved Leave / Active State: Solid geometry, checkmark glyph */
-  --color-status-approved: #047857;
-  --color-status-approved-bg: #ECFDF5;
-  --color-status-approved-rule: #A7F3D0;
+  --color-status-approved: #1E4D2B;
+  --color-status-approved-bg: #EAF2EC;
+  --color-status-approved-rule: #C4D8CA;
 
-  /* Pending Leave / Awaiting Decision: Dashed geometry, timer/progress glyph */
   --color-status-pending: #B45309;
   --color-status-pending-bg: #FEF3C7;
-  --color-status-pending-rule: #FCD34D;
+  --color-status-pending-rule: #FDE68A;
 
-  /* Rejected Leave / Denied State: Double/heavy geometry, cross glyph */
   --color-status-rejected: #B91C1C;
   --color-status-rejected-bg: #FEF2F2;
   --color-status-rejected-rule: #FECACA;
 
-  /* General Feedback / Info */
-  --color-info: #1D4ED8;
-  --color-info-bg: #EFF6FF;
-  --color-info-rule: #BFDBFE;
+  --color-status-leave: #6D28D9;
+  --color-status-leave-bg: #F5F3FF;
+  --color-status-leave-rule: #DDD6FE;
 
-  /* Danger / Form Errors */
-  --color-danger: #DC2626;
-  --color-danger-bg: #FEF2F2;
-  --color-danger-rule: #FECACA;
-  --color-danger-ink: #FFFFFF;
-
-  /* Backward Compatibility Aliases for App Components */
-  --bg-main: var(--color-paper);
-  --bg-card: var(--color-surface-raised);
-  --bg-sidebar: var(--bg-deep);
-  --bg-sidebar-hover: rgba(255, 255, 255, 0.08);
-  --bg-sidebar-active: rgba(37, 99, 235, 0.22);
+  /* ==========================================================================
+     5. THEME MAPPINGS & FOREST GREEN HARMONIZATION (Ensures 全 application harmony)
+     ========================================================================== */
+  --primary: var(--color-accent);
+  --primary-color: var(--color-accent);
+  --primary-50: var(--color-accent-soft);
+  --primary-100: #D4E4D8;
+  --primary-200: #B8D6BF;
+  --primary-300: #8EB798;
+  --primary-400: #5B9569;
+  --primary-500: var(--color-accent);
+  --primary-600: var(--color-accent-hover);
+  --primary-700: #0F2716;
   --text-main: var(--color-ink);
   --text-muted: var(--color-muted);
   --text-light: var(--color-muted-2);
-  --border-subtle: var(--color-rule);
-  --border-focus: var(--color-focus);
-  --primary-100: #EEF2FF;
-  --primary-200: #E0E7FF;
-  --primary-300: #C7D2FE;
-  --primary-500: var(--color-accent);
-  --primary-600: var(--color-accent);
-  --primary-700: var(--color-accent-hover);
-  --success-bg: var(--color-status-approved-bg);
-  --success-text: var(--color-status-approved);
-  --success-border: var(--color-status-approved-rule);
-  --warning-bg: var(--color-status-pending-bg);
-  --warning-text: var(--color-status-pending);
-  --warning-border: var(--color-status-pending-rule);
-  --danger-bg: var(--color-danger-bg);
-  --danger-text: var(--color-danger);
-  --danger-border: var(--color-danger-rule);
-  --info-bg: var(--color-info-bg);
-  --info-text: var(--color-info);
-  --info-border: var(--color-info-rule);
-
-  /* ==========================================================================
-     5. RADII & ELEVATIONS
-     ========================================================================== */
-  --radius-sm: 0.25rem;   /* 4px */
-  --radius-md: 0.375rem;  /* 6px - tight engineered corners */
-  --radius-lg: 0.5rem;    /* 8px */
-  --radius-xl: 0.75rem;   /* 12px */
-  --radius-full: 9999px;
-
-  --shadow-sm: 0 1px 2px oklch(20% 0.022 258 / 0.05);
-  --shadow-md: 0 4px 12px -2px oklch(20% 0.022 258 / 0.08), 0 2px 6px -1px oklch(20% 0.022 258 / 0.04);
-  --shadow-lg: 0 12px 28px -6px oklch(20% 0.022 258 / 0.12), 0 4px 12px -2px oklch(20% 0.022 258 / 0.06);
-  --shadow-xl: 0 24px 48px -12px oklch(20% 0.022 258 / 0.16);
-
-  /* ==========================================================================
-     6. MOTION & TRANSITIONS (No bouncy overshoots, explicit properties)
-     ========================================================================== */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-fast: 120ms;
-  --dur-base: 180ms;
-
-  --transition-surface: background-color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
-  --transition-button: background-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
-  --transition: background-color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
-
-  /* Form Element Floor Heights */
-  --control-height: 2.75rem; /* 44px accessible touch/click floor */
-  --control-height-sm: 2.25rem; /* 36px secondary action floor */
+  --bg-deep: #122817;
+  --bg-navy: #1E4D2B;
+  --cobalt: #1E4D2B;
+  --cobalt-lit: #2A673B;
+  --cobalt-text: #EAF2EC;
+  --ink-on-dark: #FBF9F5;
+  --ink-muted: #D4E4D8;
+  --dark-chip-bg: rgba(234, 242, 236, 0.12);
+  --dark-chip-border: rgba(184, 214, 191, 0.25);
+  --dark-glass-bg: rgba(18, 40, 23, 0.85);
+  --dark-glass-border: rgba(184, 214, 191, 0.2);
+  --card-white-bg: #FFFFFF;
+  --card-white-border: var(--color-rule);
+  --gradient-top-bar: linear-gradient(90deg, #122817 0%, #1E4D2B 50%, #2A673B 100%);
+  --shadow-logo-glow: 0 4px 16px rgba(30, 77, 43, 0.35);
+  --shadow-card-ambient: 0 10px 30px -5px rgba(28, 25, 23, 0.08);
+  --shadow-card-glow: 0 0 40px -10px rgba(30, 77, 43, 0.15);
 }
+

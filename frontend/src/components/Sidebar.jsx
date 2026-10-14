@@ -20,10 +20,10 @@ export const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-logo-icon">H</div>
+        <div className="sidebar-logo-icon">A</div>
         <div>
-          <h1 className="sidebar-title">HRMS</h1>
-          <p className="sidebar-subtitle">Enterprise Suite</p>
+          <h1 className="sidebar-title">Aether HR</h1>
+          <p className="sidebar-subtitle">People & Culture Suite</p>
         </div>
       </div>
 

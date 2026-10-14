@@ -163,6 +163,11 @@ public class AssetService : IAssetService
 
     public async Task<AssetRequestDto> CreateRequestAsync(int employeeId, CreateAssetRequestDto dto)
     {
+        if (dto.AssetID <= 0)
+        {
+            throw new ArgumentException("A valid AssetID is required.");
+        }
+
         var isHeld = await _assetRepository.IsAssetAssignedToEmployeeAsync(dto.AssetID, employeeId);
         if (!isHeld)
         {
@@ -179,6 +184,24 @@ public class AssetService : IAssetService
             throw new ArgumentException("Description is required.");
         }
 
+        // Check if there is already an active pending request for this asset
+        var pendingRequests = await _assetRepository.GetRequestsAsync(employeeId);
+        if (pendingRequests.Any(r => r.AssetID == dto.AssetID && r.Status == "Pending"))
+        {
+            throw new ConflictException("There is already a pending request for this asset.");
+        }
+
+        // Check asset state
+        var asset = await _assetRepository.GetByIdAsync(dto.AssetID);
+        if (asset != null && asset.Status == "UnderRepair" && dto.RequestType == "Repair")
+        {
+            throw new ConflictException("This asset is already marked as Under Repair.");
+        }
+        if (asset != null && asset.Status == "Retired")
+        {
+            throw new InvalidOperationException("Cannot raise requests for retired assets.");
+        }
+
         var request = new AssetRequest
         {
             AssetID = dto.AssetID,
@@ -190,7 +213,12 @@ public class AssetService : IAssetService
 
         var id = await _assetRepository.CreateRequestAsync(request);
         var requests = await _assetRepository.GetRequestsAsync(employeeId);
-        return requests.First(r => r.AssetRequestID == id);
+        var created = requests.FirstOrDefault(r => r.AssetRequestID == id);
+        if (created == null)
+        {
+            throw new KeyNotFoundException($"Created asset request #{id} could not be retrieved.");
+        }
+        return created;
     }
 
     public async Task<IEnumerable<AssetRequestDto>> GetRequestsAsync(string role, int employeeId)

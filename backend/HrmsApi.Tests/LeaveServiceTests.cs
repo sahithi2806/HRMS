@@ -209,6 +209,7 @@ public class LeaveServiceTests
             EmployeeID = 2,
             StartDate = start,
             EndDate = end,
+            Days = 2,
             Status = "Pending"
         };
 

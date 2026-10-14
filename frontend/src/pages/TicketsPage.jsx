@@ -101,10 +101,14 @@ export const TicketsPage = () => {
   const filteredTickets = tickets.filter(t => {
     if (!search) return true;
     const query = search.toLowerCase();
-    return t.Subject?.toLowerCase().includes(query) ||
-           t.Description?.toLowerCase().includes(query) ||
-           t.EmployeeName?.toLowerCase().includes(query) ||
-           `#${t.TicketID}`.includes(query);
+    const subject = (t.subject || t.Subject || '').toLowerCase();
+    const desc = (t.description || t.Description || '').toLowerCase();
+    const empName = (t.employeeName || t.EmployeeName || '').toLowerCase();
+    const ticketId = String(t.ticketID ?? t.ticketId ?? t.TicketID ?? '');
+    return subject.includes(query) ||
+           desc.includes(query) ||
+           empName.includes(query) ||
+           ticketId.includes(query);
   });
 
   return (
@@ -135,12 +139,13 @@ export const TicketsPage = () => {
 
       {/* Hero Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A1A5C 0%, #0047AB 60%, #2563EB 100%)',
-        borderRadius: '16px',
+        background: 'linear-gradient(135deg, #FAF6EE 0%, #F4ECE1 100%)',
+        borderRadius: 'var(--radius-lg)',
         padding: '30px 36px',
-        color: '#FFFFFF',
+        color: 'var(--color-ink)',
         marginBottom: '28px',
-        boxShadow: '0 12px 30px -10px rgba(0, 71, 171, 0.35)',
+        border: '1px solid var(--color-rule)',
+        boxShadow: 'var(--shadow-warm-sm)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -149,15 +154,27 @@ export const TicketsPage = () => {
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <Sparkles size={16} style={{ color: '#38BDF8' }} />
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#93C5FD' }}>
-              Support Center
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '999px',
+              background: 'var(--color-accent-soft)',
+              color: 'var(--color-accent)',
+              fontSize: '0.76rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase'
+            }}>
+              <Sparkles size={13} />
+              Helpdesk & Personnel Support
             </span>
           </div>
-          <h1 style={{ fontSize: '1.85rem', fontWeight: 700, margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
-            {isAdmin ? 'Helpdesk & Ticket Management' : 'Employee Support Helpdesk'}
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.95rem', fontWeight: 600, margin: '0 0 6px 0', color: 'var(--color-ink)', letterSpacing: '-0.025em' }}>
+            {isAdmin ? 'Helpdesk & Ticket Governance' : 'Employee Support Helpdesk'}
           </h1>
-          <p style={{ margin: 0, opacity: 0.85, fontSize: '0.95rem' }}>
+          <p style={{ margin: 0, color: 'var(--color-ink-muted)', fontSize: '0.94rem' }}>
             {isAdmin 
               ? 'Triage, assign, resolve and provide staff assistance on all company support requests.'
               : 'Raise inquiries or report issues regarding IT, HR, Payroll, Facilities, and Administration.'}
@@ -168,17 +185,17 @@ export const TicketsPage = () => {
           onClick={() => setModalOpen(true)}
           style={{
             padding: '12px 22px',
-            borderRadius: '10px',
+            borderRadius: 'var(--radius-sm)',
             border: 'none',
-            background: '#FFFFFF',
-            color: '#0047AB',
-            fontWeight: 700,
+            background: 'var(--color-accent)',
+            color: '#FFFFFF',
+            fontWeight: 600,
             fontSize: '0.92rem',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            boxShadow: '0 4px 12px rgba(30, 77, 43, 0.25)'
           }}
         >
           <Plus size={18} />
@@ -294,8 +311,8 @@ export const TicketsPage = () => {
         boxShadow: '0 4px 18px rgba(0, 0, 0, 0.04)'
       }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: '#64748B' }}>
-            <Clock className="animate-spin" size={32} style={{ margin: '0 auto 12px auto', color: '#0047AB' }} />
+          <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--color-ink-muted)' }}>
+            <Clock className="animate-spin" size={32} style={{ margin: '0 auto 12px auto', color: 'var(--color-accent)' }} />
             <p>Loading helpdesk tickets...</p>
           </div>
         ) : filteredTickets.length === 0 ? (
@@ -325,12 +342,25 @@ export const TicketsPage = () => {
               </thead>
               <tbody>
                 {filteredTickets.map((t) => {
-                  const statusBadge = STATUS_BADGES[t.Status] || STATUS_BADGES.Open;
-                  const priorityBadge = PRIORITY_BADGES[t.Priority] || PRIORITY_BADGES.Medium;
+                  const ticketId = t.ticketID ?? t.ticketId ?? t.TicketID;
+                  const subject = t.subject || t.Subject;
+                  const category = t.category || t.Category;
+                  const priority = t.priority || t.Priority;
+                  const status = t.status || t.Status;
+                  const replies = t.commentsCount ?? t.CommentsCount ?? 0;
+                  const rating = t.feedbackRating ?? t.FeedbackRating;
+                  const empName = t.employeeName || t.EmployeeName;
+                  const dept = t.department || t.Department;
+                  const assignedName = t.assignedToName || t.AssignedToName;
+                  const updatedAt = t.updatedAt || t.UpdatedAt || t.createdAt || t.CreatedAt;
+
+                  const statusBadge = STATUS_BADGES[status] || STATUS_BADGES.Open;
+                  const priorityBadge = PRIORITY_BADGES[priority] || PRIORITY_BADGES.Medium;
+
                   return (
                     <tr
-                      key={t.TicketID}
-                      onClick={() => navigate(`/helpdesk/${t.TicketID}`)}
+                      key={ticketId}
+                      onClick={() => navigate(`/helpdesk/${ticketId}`)}
                       style={{
                         borderBottom: '1px solid #F1F5F9',
                         cursor: 'pointer',
@@ -342,19 +372,19 @@ export const TicketsPage = () => {
                       <td style={{ padding: '16px 20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#64748B', fontWeight: 700 }}>
-                            #{t.TicketID}
+                            #{ticketId}
                           </span>
                           <span style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.94rem' }}>
-                            {t.Subject}
+                            {subject}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', fontSize: '0.78rem', color: '#64748B' }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <MessageSquare size={13} /> {t.CommentsCount} replies
+                            <MessageSquare size={13} /> {replies} replies
                           </span>
-                          {t.FeedbackRating && (
+                          {rating && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: '2px', color: '#D97706', fontWeight: 600 }}>
-                              <Star size={13} fill="#D97706" /> {t.FeedbackRating}/5
+                              <Star size={13} fill="#D97706" /> {rating}/5
                             </span>
                           )}
                         </div>
@@ -370,7 +400,7 @@ export const TicketsPage = () => {
                           color: '#334155',
                           border: '1px solid #E2E8F0'
                         }}>
-                          {t.Category}
+                          {category}
                         </span>
                       </td>
 
@@ -384,7 +414,7 @@ export const TicketsPage = () => {
                           color: priorityBadge.text,
                           border: `1px solid ${priorityBadge.border}`
                         }}>
-                          {t.Priority}
+                          {priority}
                         </span>
                       </td>
 
@@ -398,22 +428,22 @@ export const TicketsPage = () => {
                           color: statusBadge.text,
                           border: `1px solid ${statusBadge.border}`
                         }}>
-                          {t.Status}
+                          {status}
                         </span>
                       </td>
 
                       {isAdmin && (
                         <td style={{ padding: '16px 20px', color: '#334155' }}>
-                          <div style={{ fontWeight: 600 }}>{t.EmployeeName}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{t.Department}</div>
+                          <div style={{ fontWeight: 600 }}>{empName}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{dept}</div>
                         </td>
                       )}
 
                       <td style={{ padding: '16px 20px', color: '#475569' }}>
-                        {t.AssignedToName ? (
+                        {assignedName ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                            <Shield size={14} style={{ color: '#0047AB' }} />
-                            {t.AssignedToName}
+                            <Shield size={14} style={{ color: 'var(--color-accent)' }} />
+                            {assignedName}
                           </span>
                         ) : (
                           <span style={{ color: '#94A3B8', fontSize: '0.8rem', fontStyle: 'italic' }}>Unassigned</span>
@@ -421,11 +451,11 @@ export const TicketsPage = () => {
                       </td>
 
                       <td style={{ padding: '16px 20px', color: '#64748B', fontSize: '0.82rem' }}>
-                        {new Date(t.UpdatedAt).toLocaleDateString()}
+                        {updatedAt ? new Date(updatedAt).toLocaleDateString() : 'N/A'}
                       </td>
 
                       <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                        <span style={{ color: '#0047AB', display: 'inline-flex', alignItems: 'center' }}>
+                        <span style={{ color: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center' }}>
                           <ChevronRight size={18} />
                         </span>
                       </td>
@@ -587,7 +617,7 @@ export const TicketsPage = () => {
                     padding: '9px 22px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: '#0047AB',
+                    background: 'var(--color-accent)',
                     color: '#FFFFFF',
                     fontWeight: 600,
                     cursor: submitting ? 'not-allowed' : 'pointer'

@@ -15,7 +15,14 @@ export const assetService = {
   },
 
   createAsset: async (data) => {
-    const response = await api.post('/assets', data);
+    const payload = {
+      assetTag: data.assetTag || data.AssetTag,
+      name: data.name || data.Name,
+      category: data.category || data.Category,
+      serialNumber: data.serialNumber || data.SerialNumber || null,
+      purchaseDate: data.purchaseDate || data.PurchaseDate || null
+    };
+    const response = await api.post('/assets', payload);
     return response.data;
   },
 
@@ -30,7 +37,11 @@ export const assetService = {
   },
 
   assignAsset: async (id, employeeId) => {
-    const response = await api.post(`/assets/${id}/assign`, { employeeId });
+    const empId = Number(employeeId);
+    const response = await api.post(`/assets/${id}/assign`, {
+      EmployeeID: empId,
+      employeeId: empId
+    });
     return response.data;
   },
 
@@ -45,7 +56,14 @@ export const assetService = {
   },
 
   createRequest: async (data) => {
-    const response = await api.post('/assets/requests', data);
+    const assetId = Number(data.assetID ?? data.assetId ?? data.AssetID);
+    const payload = {
+      AssetID: assetId,
+      assetId: assetId,
+      RequestType: data.requestType || data.RequestType,
+      Description: (data.description || data.Description || '').trim()
+    };
+    const response = await api.post('/assets/requests', payload);
     return response.data;
   },
 

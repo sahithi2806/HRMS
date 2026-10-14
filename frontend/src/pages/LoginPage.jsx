@@ -70,11 +70,7 @@ export const LoginPage = () => {
       setError('');
       setLoading(true);
       const user = await login(email, password);
-      if (user.role?.toLowerCase() === 'employee') {
-        navigate('/profile');
-      } else {
-        navigate('/employees');
-      }
+      navigate('/portal');
     } catch (err) {
       let msg = err.response?.data?.message;
       if (!msg) {

@@ -179,19 +179,18 @@ public class PortalRepository : IPortalRepository
         }
         else if (role == "Admin")
         {
+            // Admin sees ALL pending items company-wide
             const string pendingLeavesSql = """
                 SELECT COUNT(1)
-                FROM LeaveRequests lr
-                INNER JOIN Employees e ON lr.EmployeeID = e.EmployeeID
-                WHERE lr.Status = 'Pending' AND e.ManagerID IS NULL AND lr.EmployeeID <> @EmployeeID;
+                FROM LeaveRequests
+                WHERE Status = 'Pending' AND EmployeeID <> @EmployeeID;
                 """;
             var pendingLeaves = await connection.ExecuteScalarAsync<int>(pendingLeavesSql, new { EmployeeID = employeeId });
 
             const string pendingRegsSql = """
                 SELECT COUNT(1)
-                FROM AttendanceRegularizations ar
-                INNER JOIN Employees e ON ar.EmployeeID = e.EmployeeID
-                WHERE ar.Status = 'Pending' AND e.ManagerID IS NULL AND ar.EmployeeID <> @EmployeeID;
+                FROM AttendanceRegularizations
+                WHERE Status = 'Pending' AND EmployeeID <> @EmployeeID;
                 """;
             var pendingRegs = await connection.ExecuteScalarAsync<int>(pendingRegsSql, new { EmployeeID = employeeId });
 

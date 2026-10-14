@@ -66,9 +66,9 @@ public class LeaveServiceHardeningTests
     public async Task SubmitLeaveRequest_WhenAvailableDaysInsufficientDueToPendingRequests_ThrowsInvalidOperationException()
     {
         var empId = 8;
-        // Mon-Wed: 3 business days
-        var start = new DateTime(2026, 10, 12);
-        var end = new DateTime(2026, 10, 14);
+        // Mon-Wed: 3 business days in future
+        var start = new DateTime(2026, 10, 19);
+        var end = new DateTime(2026, 10, 21);
 
         // Remaining is 5, but Pending is 3 -> Available is 2
         var balance = new LeaveBalanceDto

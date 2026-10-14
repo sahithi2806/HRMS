@@ -1,20 +1,9 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User as UserIcon, Shield, Briefcase } from 'lucide-react';
+import { LogOut, User as UserIcon, Shield, Briefcase, MapPin } from 'lucide-react';
 
 export const Navbar = () => {
   const { user, role, logout } = useAuth();
-
-  const getRoleBadgeClass = () => {
-    switch (role?.toLowerCase()) {
-      case 'admin':
-        return 'badge-admin';
-      case 'manager':
-        return 'badge-manager';
-      default:
-        return 'badge-employee';
-    }
-  };
 
   const getRoleIcon = () => {
     switch (role?.toLowerCase()) {
@@ -28,14 +17,32 @@ export const Navbar = () => {
   };
 
   return (
-    <header className="top-navbar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-          HRMS Enterprise Portal
+    <header className="top-navbar" style={{ padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <h2 style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '1.25rem',
+          fontWeight: 700,
+          color: 'var(--color-ink)',
+          letterSpacing: '-0.02em',
+          margin: 0
+        }}>
+          Aether HR
         </h2>
-        <span style={{ fontSize: '0.72rem', background: '#ecfdf5', color: '#047857', padding: '3px 10px', borderRadius: '12px', fontWeight: 600, border: '1px solid #a7f3d0', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
-          India Region Workspace
+        <span style={{
+          fontSize: '0.72rem',
+          background: 'var(--color-accent-soft)',
+          color: 'var(--color-accent)',
+          padding: '4px 10px',
+          borderRadius: '999px',
+          fontWeight: 600,
+          border: '1px solid var(--color-status-approved-rule)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '5px'
+        }}>
+          <MapPin size={11} />
+          Main Studio &bull; Bengaluru
         </span>
       </div>
 
@@ -43,28 +50,35 @@ export const Navbar = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div
             style={{
-              width: '38px',
-              height: '38px',
+              width: '36px',
+              height: '36px',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--primary-100), var(--primary-200))',
-              color: 'var(--primary-700)',
+              backgroundColor: 'var(--color-accent-soft)',
+              color: 'var(--color-accent)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 700,
-              fontSize: '0.95rem',
-              border: '1px solid var(--primary-300)'
+              fontSize: '0.9rem',
+              border: '1px solid var(--color-status-approved-rule)'
             }}
           >
             {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-main)' }}>
+            <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--color-ink)' }}>
               {user?.name || 'User'}
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className={`badge ${getRoleBadgeClass()}`} style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+              <span style={{
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: 'var(--color-accent)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
                 {getRoleIcon()}
                 {role}
               </span>
@@ -76,12 +90,20 @@ export const Navbar = () => {
           onClick={logout}
           className="btn btn-secondary btn-sm"
           title="Sign out"
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: 'var(--color-surface)',
+            borderColor: 'var(--color-rule)'
+          }}
         >
-          <LogOut size={15} />
-          <span>Logout</span>
+          <LogOut size={14} />
+          <span>Sign Out</span>
         </button>
       </div>
     </header>
   );
 };
+
+export default Navbar;

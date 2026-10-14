@@ -3,18 +3,19 @@ import { useAuth } from '../context/AuthContext';
 import { attendanceService } from '../services/attendanceService';
 import { 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, 
-  CheckCircle2, AlertCircle, X
+  CheckCircle2, AlertCircle, X, Clock, PlayCircle, StopCircle, RefreshCw
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
-  Present: { label: 'Present', bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' },
+  Present: { label: 'Present', bg: 'var(--color-accent-soft)', text: 'var(--color-accent)', border: '#B8D6BF' },
   Late: { label: 'Late Arrival', bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' },
-  HalfDay: { label: 'Half Day', bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' },
+  HalfDay: { label: 'Half Day', bg: '#FEF3C7', text: '#B45309', border: '#FDE68A' },
   Absent: { label: 'Absent', bg: '#FEF2F2', text: '#DC2626', border: '#FECACA' },
   OnLeave: { label: 'On Leave', bg: '#F5F3FF', text: '#7C3AED', border: '#DDD6FE' },
   Weekend: { label: 'Weekend', bg: '#F8FAFC', text: '#94A3B8', border: '#E2E8F0' },
   MissingCheckOut: { label: 'Missed Out-Punch', bg: '#FFF1F2', text: '#E11D48', border: '#FECDD3' },
-  NotCheckedIn: { label: 'Pending', bg: '#F1F5F9', text: '#64748B', border: '#CBD5E1' }
+  NotCheckedIn: { label: 'Pending', bg: '#F1F5F9', text: '#64748B', border: '#CBD5E1' },
+  CheckedIn: { label: 'Clocked In', bg: 'var(--color-accent-soft)', text: 'var(--color-accent)', border: '#B8D6BF' }
 };
 
 export const AttendancePage = () => {
@@ -26,11 +27,20 @@ export const AttendancePage = () => {
   });
 
   const [monthlyData, setMonthlyData] = useState(null);
+  const [todayAttendance, setTodayAttendance] = useState(null);
+  const [punchLoading, setPunchLoading] = useState(false);
   const [regularizations, setRegularizations] = useState([]);
   const [teamAttendance, setTeamAttendance] = useState([]);
   const [selectedTeamDate, setSelectedTeamDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+
+  // Clock ticker for punch widget
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Regularize modal state
   const [regModalOpen, setRegModalOpen] = useState(false);
@@ -51,6 +61,15 @@ export const AttendancePage = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const loadToday = useCallback(async () => {
+    try {
+      const data = await attendanceService.getToday();
+      setTodayAttendance(data);
+    } catch (err) {
+      console.error('Failed to load today attendance:', err);
+    }
+  }, []);
+
   const loadCalendar = useCallback(async () => {
     try {
       setLoading(true);
@@ -67,9 +86,10 @@ export const AttendancePage = () => {
   const loadRegularizations = useCallback(async () => {
     try {
       const list = await attendanceService.getRegularizations();
-      setRegularizations(list);
+      setRegularizations(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error('Failed to load regularizations:', err);
+      setRegularizations([]);
     }
   }, []);
 
@@ -77,11 +97,16 @@ export const AttendancePage = () => {
     if (!isManager && !isAdmin) return;
     try {
       const data = await attendanceService.getTeamAttendance(selectedTeamDate);
-      setTeamAttendance(data);
+      setTeamAttendance(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load team attendance:', err);
+      setTeamAttendance([]);
     }
   }, [isManager, isAdmin, selectedTeamDate]);
+
+  useEffect(() => {
+    loadToday();
+  }, [loadToday]);
 
   useEffect(() => {
     if (activeTab === 'calendar') {
@@ -103,6 +128,36 @@ export const AttendancePage = () => {
     const [y, m] = currentMonth.split('-').map(Number);
     const next = new Date(y, m, 1);
     setCurrentMonth(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`);
+  };
+
+  const handleCheckIn = async () => {
+    setPunchLoading(true);
+    try {
+      await attendanceService.checkIn();
+      showToast('success', 'Clocked in successfully! Have a productive workday.');
+      await loadToday();
+      if (activeTab === 'calendar') await loadCalendar();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.title || 'Check-in failed.';
+      showToast('error', msg);
+    } finally {
+      setPunchLoading(false);
+    }
+  };
+
+  const handleCheckOut = async () => {
+    setPunchLoading(true);
+    try {
+      await attendanceService.checkOut();
+      showToast('success', 'Clocked out successfully! Have a great evening.');
+      await loadToday();
+      if (activeTab === 'calendar') await loadCalendar();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.title || 'Check-out failed.';
+      showToast('error', msg);
+    } finally {
+      setPunchLoading(false);
+    }
   };
 
   const openRegularizeModal = (dayDate) => {
@@ -174,11 +229,31 @@ export const AttendancePage = () => {
       await attendanceService.cancelRegularization(id);
       showToast('success', 'Request cancelled.');
       loadRegularizations();
+      if (activeTab === 'calendar') loadCalendar();
     } catch (err) {
       const msg = err.response?.data?.message || 'Could not cancel request.';
       showToast('error', msg);
     }
   };
+
+  // Normalized monthly summary metrics
+  const workingDays = monthlyData?.workingDays ?? monthlyData?.WorkingDays ?? 0;
+  const presentDays = monthlyData?.presentDays ?? monthlyData?.PresentDays ?? 0;
+  const lateDays = monthlyData?.lateDays ?? monthlyData?.LateDays ?? 0;
+  const halfDays = monthlyData?.halfDays ?? monthlyData?.HalfDays ?? 0;
+  const absentDays = monthlyData?.absentDays ?? monthlyData?.AbsentDays ?? 0;
+  const leaveDays = monthlyData?.leaveDays ?? monthlyData?.LeaveDays ?? 0;
+  const daysList = monthlyData?.days ?? monthlyData?.Days ?? [];
+
+  // Normalized today's attendance details
+  const todayState = todayAttendance?.state ?? todayAttendance?.State ?? 'NotCheckedIn';
+  const canCheckIn = todayAttendance?.canCheckIn ?? todayAttendance?.CanCheckIn ?? false;
+  const canCheckOut = todayAttendance?.canCheckOut ?? todayAttendance?.CanCheckOut ?? false;
+  const todayCheckInAt = todayAttendance?.checkInAt ?? todayAttendance?.CheckInAt;
+  const todayCheckOutAt = todayAttendance?.checkOutAt ?? todayAttendance?.CheckOutAt;
+  const todayTotalHours = todayAttendance?.totalHours ?? todayAttendance?.TotalHours ?? 0;
+  const todayIsLate = todayAttendance?.isLate ?? todayAttendance?.IsLate ?? false;
+  const todayMessage = todayAttendance?.message ?? todayAttendance?.Message;
 
   return (
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
@@ -235,8 +310,8 @@ export const AttendancePage = () => {
               fontSize: '0.85rem',
               cursor: 'pointer',
               background: activeTab === 'calendar' ? '#FFFFFF' : 'transparent',
-              color: activeTab === 'calendar' ? '#0047AB' : '#64748B',
-              boxShadow: activeTab === 'calendar' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+              color: activeTab === 'calendar' ? 'var(--color-accent)' : 'var(--color-ink-muted)',
+              boxShadow: activeTab === 'calendar' ? 'var(--shadow-warm-sm)' : 'none'
             }}
           >
             My Calendar
@@ -252,8 +327,8 @@ export const AttendancePage = () => {
               fontSize: '0.85rem',
               cursor: 'pointer',
               background: activeTab === 'regularizations' ? '#FFFFFF' : 'transparent',
-              color: activeTab === 'regularizations' ? '#0047AB' : '#64748B',
-              boxShadow: activeTab === 'regularizations' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+              color: activeTab === 'regularizations' ? 'var(--color-accent)' : 'var(--color-ink-muted)',
+              boxShadow: activeTab === 'regularizations' ? 'var(--shadow-warm-sm)' : 'none'
             }}
           >
             Regularizations
@@ -270,8 +345,8 @@ export const AttendancePage = () => {
                 fontSize: '0.85rem',
                 cursor: 'pointer',
                 background: activeTab === 'team' ? '#FFFFFF' : 'transparent',
-                color: activeTab === 'team' ? '#0047AB' : '#64748B',
-                boxShadow: activeTab === 'team' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                color: activeTab === 'team' ? 'var(--color-accent)' : 'var(--color-ink-muted)',
+                boxShadow: activeTab === 'team' ? 'var(--shadow-warm-sm)' : 'none'
               }}
             >
               Team Daily
@@ -280,12 +355,161 @@ export const AttendancePage = () => {
         </div>
       </div>
 
+      {/* TODAY'S ATTENDANCE QUICK PUNCH WIDGET */}
+      <div style={{
+        background: '#FFFFFF',
+        borderRadius: '16px',
+        border: '1px solid #E2E8F0',
+        padding: '20px 24px',
+        marginBottom: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '20px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            width: '52px',
+            height: '52px',
+            borderRadius: '14px',
+            background: todayState === 'CheckedIn' ? '#EFF6FF' : (todayState === 'Present' ? '#ECFDF5' : '#F8FAFC'),
+            border: `1px solid ${todayState === 'CheckedIn' ? '#BFDBFE' : (todayState === 'Present' ? '#A7F3D0' : '#E2E8F0')}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: todayState === 'CheckedIn' ? 'var(--color-accent)' : (todayState === 'Present' ? 'var(--color-accent)' : 'var(--color-ink-muted)')
+          }}>
+            <Clock size={26} />
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '1.1rem', fontFamily: 'var(--font-display)', fontWeight: 600, color: 'var(--color-ink)' }}>
+                Today's Work Log
+              </span>
+              <span style={{
+                padding: '3px 10px',
+                borderRadius: '999px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                background: todayState === 'CheckedIn' ? 'var(--color-accent-soft)' :
+                            todayState === 'Present' ? 'var(--color-accent-soft)' :
+                            todayState === 'OnLeave' ? '#F5F3FF' :
+                            todayState === 'Weekend' ? '#F8FAFC' : '#F1F5F9',
+                color: todayState === 'CheckedIn' ? 'var(--color-accent)' :
+                       todayState === 'Present' ? 'var(--color-accent)' :
+                       todayState === 'OnLeave' ? '#7C3AED' :
+                       todayState === 'Weekend' ? '#94A3B8' : '#64748B'
+              }}>
+                {todayState === 'CheckedIn' ? 'Currently Clocked In' :
+                 todayState === 'Present' ? 'Completed Shift' :
+                 todayState === 'OnLeave' ? (todayMessage || 'On Leave') :
+                 todayState === 'Weekend' ? 'Weekly Off' : 'Not Clocked In'}
+              </span>
+              {todayIsLate && (
+                <span style={{ fontSize: '0.72rem', background: '#FEF3C7', color: '#B45309', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                  LATE
+                </span>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px', marginTop: '4px', fontSize: '0.85rem', color: '#64748B' }}>
+              <span>Time: <strong style={{ color: '#0F172A' }}>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</strong></span>
+              {todayCheckInAt && (
+                <span>In: <strong style={{ color: '#0F172A' }}>{new Date(todayCheckInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>
+              )}
+              {todayCheckOutAt && (
+                <span>Out: <strong style={{ color: '#0F172A' }}>{new Date(todayCheckOutAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>
+              )}
+              {todayTotalHours > 0 && (
+                <span>Hours: <strong style={{ color: 'var(--color-accent)' }}>{todayTotalHours} hrs</strong></span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Punch Action Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {canCheckIn && (
+            <button
+              onClick={handleCheckIn}
+              disabled={punchLoading}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 20px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#059669',
+                color: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: punchLoading ? 'not-allowed' : 'pointer',
+                boxShadow: '0 2px 8px rgba(5, 150, 105, 0.25)'
+              }}
+            >
+              <PlayCircle size={18} />
+              {punchLoading ? 'Recording...' : 'Clock In Now'}
+            </button>
+          )}
+
+          {canCheckOut && (
+            <button
+              onClick={handleCheckOut}
+              disabled={punchLoading}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 20px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#DC2626',
+                color: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: punchLoading ? 'not-allowed' : 'pointer',
+                boxShadow: '0 2px 8px rgba(220, 38, 38, 0.25)'
+              }}
+            >
+              <StopCircle size={18} />
+              {punchLoading ? 'Recording...' : 'Clock Out Now'}
+            </button>
+          )}
+
+          {!canCheckIn && !canCheckOut && (
+            <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontStyle: 'italic' }}>
+              {todayState === 'Present' ? 'Shift complete for today' : 'No punch actions available'}
+            </span>
+          )}
+
+          <button
+            onClick={() => { loadToday(); if (activeTab === 'calendar') loadCalendar(); }}
+            title="Refresh status"
+            style={{
+              padding: '9px',
+              borderRadius: '8px',
+              border: '1px solid #CBD5E1',
+              background: '#FFFFFF',
+              color: '#64748B',
+              cursor: 'pointer'
+            }}
+          >
+            <RefreshCw size={16} />
+          </button>
+        </div>
+      </div>
+
       {/* TAB 1: CALENDAR VIEW */}
       {activeTab === 'calendar' && (
         <div>
           {loading && !monthlyData && (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#64748B' }}>
-              Loading attendance data...
+            <div style={{ padding: '40px', textAlign: 'center', color: '#64748B' }}>
+              Loading attendance calendar data...
             </div>
           )}
 
@@ -300,37 +524,37 @@ export const AttendancePage = () => {
               <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>Working Days</span>
                 <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>
-                  {monthlyData.WorkingDays}
+                  {workingDays}
                 </span>
               </div>
               <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
                 <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600, textTransform: 'uppercase' }}>Present Days</span>
                 <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, color: '#059669', marginTop: '4px' }}>
-                  {monthlyData.PresentDays}
+                  {presentDays}
                 </span>
               </div>
               <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
                 <span style={{ fontSize: '0.75rem', color: '#D97706', fontWeight: 600, textTransform: 'uppercase' }}>Late Arrivals</span>
                 <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, color: '#D97706', marginTop: '4px' }}>
-                  {monthlyData.LateDays}
+                  {lateDays}
                 </span>
               </div>
               <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
                 <span style={{ fontSize: '0.75rem', color: '#2563EB', fontWeight: 600, textTransform: 'uppercase' }}>Half Days</span>
                 <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, color: '#2563EB', marginTop: '4px' }}>
-                  {monthlyData.HalfDays}
+                  {halfDays}
                 </span>
               </div>
               <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
                 <span style={{ fontSize: '0.75rem', color: '#DC2626', fontWeight: 600, textTransform: 'uppercase' }}>Absent / Missed</span>
                 <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, color: '#DC2626', marginTop: '4px' }}>
-                  {monthlyData.AbsentDays}
+                  {absentDays}
                 </span>
               </div>
               <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
                 <span style={{ fontSize: '0.75rem', color: '#7C3AED', fontWeight: 600, textTransform: 'uppercase' }}>On Leave</span>
                 <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, color: '#7C3AED', marginTop: '4px' }}>
-                  {monthlyData.LeaveDays}
+                  {leaveDays}
                 </span>
               </div>
             </div>
@@ -366,8 +590,8 @@ export const AttendancePage = () => {
               <ChevronLeft size={16} /> Previous
             </button>
 
-            <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CalendarIcon size={20} style={{ color: '#0047AB' }} />
+            <div style={{ fontSize: '1.15rem', fontFamily: 'var(--font-display)', fontWeight: 600, color: 'var(--color-ink)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CalendarIcon size={20} style={{ color: 'var(--color-accent)' }} />
               {new Date(`${currentMonth}-01`).toLocaleString(undefined, { month: 'long', year: 'numeric' })}
             </div>
 
@@ -405,11 +629,20 @@ export const AttendancePage = () => {
               gap: '12px',
               padding: '16px'
             }}>
-              {monthlyData?.Days.map((d) => {
-                const conf = STATUS_CONFIG[d.Status] || STATUS_CONFIG.NotCheckedIn;
+              {daysList.map((d) => {
+                const dayDate = d?.date ?? d?.Date;
+                const dayOfWeek = d?.dayOfWeek ?? d?.DayOfWeek ?? '';
+                const dayStatus = d?.status ?? d?.Status ?? 'NotCheckedIn';
+                const conf = STATUS_CONFIG[dayStatus] || STATUS_CONFIG.NotCheckedIn;
+                const checkIn = d?.checkInAt ?? d?.CheckInAt;
+                const checkOut = d?.checkOutAt ?? d?.CheckOutAt;
+                const hours = d?.totalHours ?? d?.TotalHours ?? 0;
+                const canReg = d?.canRegularize ?? d?.CanRegularize ?? false;
+                const leaveType = d?.leaveType ?? d?.LeaveType;
+
                 return (
                   <div
-                    key={d.Date}
+                    key={dayDate}
                     style={{
                       background: conf.bg,
                       borderRadius: '12px',
@@ -424,10 +657,10 @@ export const AttendancePage = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                         <div>
                           <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>
-                            {new Date(`${d.Date}T00:00:00`).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+                            {new Date(`${dayDate}T00:00:00`).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
                           </span>
                           <span style={{ fontSize: '0.78rem', color: '#64748B', marginLeft: '6px' }}>
-                            {d.DayOfWeek.substring(0, 3)}
+                            {dayOfWeek.substring(0, 3)}
                           </span>
                         </div>
 
@@ -447,16 +680,16 @@ export const AttendancePage = () => {
 
                       {/* Punches or Leave Note */}
                       <div style={{ fontSize: '0.8rem', color: '#334155', minHeight: '36px' }}>
-                        {d.Status === 'OnLeave' ? (
-                          <span style={{ color: '#7C3AED', fontWeight: 600 }}>{d.LeaveType} Leave</span>
-                        ) : d.Status === 'Weekend' ? (
+                        {dayStatus === 'OnLeave' ? (
+                          <span style={{ color: '#7C3AED', fontWeight: 600 }}>{leaveType ? `${leaveType} Leave` : 'On Leave'}</span>
+                        ) : dayStatus === 'Weekend' ? (
                           <span style={{ color: '#94A3B8' }}>Weekly Off</span>
-                        ) : d.CheckInAt ? (
+                        ) : checkIn ? (
                           <div>
-                            <div>In: <strong>{new Date(d.CheckInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
-                              {d.CheckOutAt && <span> &bull; Out: <strong>{new Date(d.CheckOutAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>}
+                            <div>In: <strong>{new Date(checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+                              {checkOut && <span> &bull; Out: <strong>{new Date(checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>}
                             </div>
-                            <div style={{ color: '#64748B', marginTop: '2px' }}>Total: <strong>{d.TotalHours} hrs</strong></div>
+                            <div style={{ color: '#64748B', marginTop: '2px' }}>Total: <strong>{hours} hrs</strong></div>
                           </div>
                         ) : (
                           <span style={{ color: '#94A3B8' }}>No punches recorded</span>
@@ -466,16 +699,16 @@ export const AttendancePage = () => {
 
                     {/* Regularize Action Button */}
                     <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                      {d.CanRegularize ? (
+                      {canReg ? (
                         <button
-                          onClick={() => openRegularizeModal(d.Date)}
+                          onClick={() => openRegularizeModal(dayDate)}
                           style={{
                             width: '100%',
                             padding: '6px 10px',
                             borderRadius: '6px',
                             border: '1px solid #CBD5E1',
                             background: '#FFFFFF',
-                            color: '#0047AB',
+                            color: 'var(--color-accent)',
                             fontSize: '0.75rem',
                             fontWeight: 600,
                             cursor: 'pointer'
@@ -485,7 +718,7 @@ export const AttendancePage = () => {
                         </button>
                       ) : (
                         <span style={{ fontSize: '0.72rem', color: '#94A3B8', display: 'block', textAlign: 'center' }}>
-                          {d.Status === 'Weekend' || d.Status === 'OnLeave' ? 'Off Day' : 'Completed'}
+                          {dayStatus === 'Weekend' || dayStatus === 'OnLeave' ? 'Off Day' : 'Completed'}
                         </span>
                       )}
                     </div>
@@ -531,24 +764,37 @@ export const AttendancePage = () => {
                   </tr>
                 ) : (
                   regularizations.map((r) => {
-                    const isPending = r.Status === 'Pending';
-                    const isOwn = r.EmployeeID === user?.employeeId;
+                    const regId = r?.regularizationID ?? r?.regularizationId ?? r?.RegularizationID;
+                    const empId = r?.employeeID ?? r?.employeeId ?? r?.EmployeeID;
+                    const status = r?.status ?? r?.Status ?? 'Pending';
+                    const empName = r?.employeeName ?? r?.EmployeeName ?? 'Employee';
+                    const dept = r?.department ?? r?.Department ?? '';
+                    const workDate = r?.workDate ?? r?.WorkDate ?? '';
+                    const reqCheckIn = r?.requestedCheckIn ?? r?.RequestedCheckIn;
+                    const reqCheckOut = r?.requestedCheckOut ?? r?.RequestedCheckOut;
+                    const reason = r?.reason ?? r?.Reason ?? '';
+                    const reviewerName = r?.reviewerName ?? r?.ReviewerName ?? r?.approverName ?? r?.ApproverName;
+                    const reviewerComment = r?.reviewerComment ?? r?.ReviewerComment ?? r?.managerComment ?? r?.ManagerComment;
+
+                    const isPending = status === 'Pending';
+                    const loggedEmpId = user?.employeeId ?? user?.employeeID ?? user?.id;
+                    const isOwn = empId === loggedEmpId;
                     const canReview = isPending && !isOwn && (isManager || isAdmin);
 
                     return (
-                      <tr key={r.RegularizationID} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <tr key={regId} style={{ borderBottom: '1px solid #F1F5F9' }}>
                         <td style={{ padding: '14px 20px', fontWeight: 600, color: '#0F172A' }}>
-                          {r.EmployeeName}
-                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B', fontWeight: 400 }}>{r.Department}</span>
+                          {empName}
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B', fontWeight: 400 }}>{dept}</span>
                         </td>
                         <td style={{ padding: '14px 20px', color: '#334155', fontWeight: 500 }}>
-                          {r.WorkDate}
+                          {workDate}
                         </td>
                         <td style={{ padding: '14px 20px', color: '#334155' }}>
-                          {new Date(r.RequestedCheckIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} &ndash; {new Date(r.RequestedCheckOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {reqCheckIn ? new Date(reqCheckIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'} &ndash; {reqCheckOut ? new Date(reqCheckOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                         </td>
                         <td style={{ padding: '14px 20px', color: '#475569', maxWidth: '240px' }}>
-                          {r.Reason}
+                          {reason}
                         </td>
                         <td style={{ padding: '14px 20px' }}>
                           <span style={{
@@ -557,21 +803,19 @@ export const AttendancePage = () => {
                             fontSize: '0.75rem',
                             fontWeight: 700,
                             textTransform: 'uppercase',
-                            background: r.Status === 'Approved' ? '#ECFDF5' :
-                                        r.Status === 'Rejected' ? '#FEF2F2' :
-                                        r.Status === 'Cancelled' ? '#F1F5F9' : '#FFFBEB',
-                            color: r.Status === 'Approved' ? '#059669' :
-                                   r.Status === 'Rejected' ? '#DC2626' :
-                                   r.Status === 'Cancelled' ? '#64748B' : '#D97706'
+                            background: status === 'Approved' ? '#ECFDF5' :
+                                        status === 'Rejected' ? '#FEF2F2' : '#FFFBEB',
+                            color: status === 'Approved' ? '#059669' :
+                                   status === 'Rejected' ? '#DC2626' : '#D97706'
                           }}>
-                            {r.Status}
+                            {status}
                           </span>
                         </td>
-                        <td style={{ padding: '14px 20px', fontSize: '0.78rem', color: '#64748B' }}>
-                          {r.ApproverName ? (
+                        <td style={{ padding: '14px 20px', fontSize: '0.8rem', color: '#64748B' }}>
+                          {reviewerName ? (
                             <div>
-                              <span>By: {r.ApproverName}</span>
-                              {r.ManagerComment && <div style={{ fontStyle: 'italic', color: '#475569' }}>"{r.ManagerComment}"</div>}
+                              <div>Reviewed by: <strong style={{ color: '#0F172A' }}>{reviewerName}</strong></div>
+                              {reviewerComment && <div style={{ fontStyle: 'italic', color: '#475569' }}>"{reviewerComment}"</div>}
                             </div>
                           ) : '--'}
                         </td>
@@ -580,7 +824,7 @@ export const AttendancePage = () => {
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                               <button
                                 onClick={() => {
-                                  setReviewTarget({ id: r.RegularizationID, action: 'approve' });
+                                  setReviewTarget({ id: regId, action: 'approve' });
                                   setReviewComment('');
                                   setReviewModalOpen(true);
                                 }}
@@ -599,7 +843,7 @@ export const AttendancePage = () => {
                               </button>
                               <button
                                 onClick={() => {
-                                  setReviewTarget({ id: r.RegularizationID, action: 'reject' });
+                                  setReviewTarget({ id: regId, action: 'reject' });
                                   setReviewComment('');
                                   setReviewModalOpen(true);
                                 }}
@@ -619,7 +863,7 @@ export const AttendancePage = () => {
                             </div>
                           ) : isOwn && isPending ? (
                             <button
-                              onClick={() => handleCancelRegularization(r.RegularizationID)}
+                              onClick={() => handleCancelRegularization(regId)}
                               style={{
                                 padding: '6px 12px',
                                 borderRadius: '6px',
@@ -696,48 +940,60 @@ export const AttendancePage = () => {
                     </td>
                   </tr>
                 ) : (
-                  teamAttendance.map((t) => (
-                    <tr key={t.EmployeeID} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '14px 20px', fontWeight: 600, color: '#0F172A' }}>
-                        {t.EmployeeName}
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B', fontWeight: 400 }}>{t.Position}</span>
-                      </td>
-                      <td style={{ padding: '14px 20px', color: '#475569' }}>
-                        {t.Department}
-                      </td>
-                      <td style={{ padding: '14px 20px', color: '#1E293B' }}>
-                        {t.CheckInAt ? (
-                          <span>
-                            {new Date(t.CheckInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            {t.IsLate && <span style={{ marginLeft: '6px', fontSize: '0.7rem', color: '#D97706', fontWeight: 700 }}>LATE</span>}
+                  teamAttendance.map((t) => {
+                    const empId = t?.employeeID ?? t?.employeeId ?? t?.EmployeeID;
+                    const empName = t?.employeeName ?? t?.EmployeeName ?? 'Employee';
+                    const position = t?.position ?? t?.Position ?? '';
+                    const dept = t?.department ?? t?.Department ?? '';
+                    const checkIn = t?.checkInAt ?? t?.CheckInAt;
+                    const checkOut = t?.checkOutAt ?? t?.CheckOutAt;
+                    const isLate = t?.isLate ?? t?.IsLate ?? false;
+                    const totalHours = t?.totalHours ?? t?.TotalHours;
+                    const status = t?.status ?? t?.Status ?? 'NotCheckedIn';
+
+                    return (
+                      <tr key={empId} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                        <td style={{ padding: '14px 20px', fontWeight: 600, color: '#0F172A' }}>
+                          {empName}
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748B', fontWeight: 400 }}>{position}</span>
+                        </td>
+                        <td style={{ padding: '14px 20px', color: '#475569' }}>
+                          {dept}
+                        </td>
+                        <td style={{ padding: '14px 20px', color: '#1E293B' }}>
+                          {checkIn ? (
+                            <span>
+                              {new Date(checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {isLate && <span style={{ marginLeft: '6px', fontSize: '0.7rem', color: '#D97706', fontWeight: 700 }}>LATE</span>}
+                            </span>
+                          ) : '--:--'}
+                        </td>
+                        <td style={{ padding: '14px 20px', color: '#1E293B' }}>
+                          {checkOut ? new Date(checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                        </td>
+                        <td style={{ padding: '14px 20px', fontWeight: 700, color: 'var(--color-accent)', fontVariantNumeric: 'tabular-nums' }}>
+                          {totalHours ? `${totalHours} hrs` : '--'}
+                        </td>
+                        <td style={{ padding: '14px 20px' }}>
+                          <span style={{
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            background: status === 'Present' ? '#ECFDF5' :
+                                        status === 'HalfDay' ? '#EFF6FF' :
+                                        status === 'Absent' ? '#FEF2F2' : '#F1F5F9',
+                            color: status === 'Present' ? '#059669' :
+                                   status === 'HalfDay' ? '#2563EB' :
+                                   status === 'Absent' ? '#DC2626' : '#64748B'
+                          }}>
+                            {status}
                           </span>
-                        ) : '--:--'}
-                      </td>
-                      <td style={{ padding: '14px 20px', color: '#1E293B' }}>
-                        {t.CheckOutAt ? new Date(t.CheckOutAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                      </td>
-                      <td style={{ padding: '14px 20px', fontWeight: 700, color: '#0047AB' }}>
-                        {t.TotalHours ? `${t.TotalHours} hrs` : '--'}
-                      </td>
-                      <td style={{ padding: '14px 20px' }}>
-                        <span style={{
-                          padding: '4px 10px',
-                          borderRadius: '999px',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          background: t.Status === 'Present' ? '#ECFDF5' :
-                                      t.Status === 'HalfDay' ? '#EFF6FF' :
-                                      t.Status === 'Absent' ? '#FEF2F2' : '#F1F5F9',
-                          color: t.Status === 'Present' ? '#059669' :
-                                 t.Status === 'HalfDay' ? '#2563EB' :
-                                 t.Status === 'Absent' ? '#DC2626' : '#64748B'
-                        }}>
-                          {t.Status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -882,7 +1138,7 @@ export const AttendancePage = () => {
                     padding: '10px 20px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: '#0047AB',
+                    background: 'var(--color-accent)',
                     color: '#FFFFFF',
                     fontWeight: 600,
                     cursor: 'pointer'
@@ -985,4 +1241,5 @@ export const AttendancePage = () => {
     </div>
   );
 };
+
 export default AttendancePage;

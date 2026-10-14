@@ -369,7 +369,7 @@ strong, b {
 }
 
 /* ==========================================================================
-   LOGIN SCREEN (Continuous Dark Cobalt Surface & Glows)
+   LOGIN SCREEN (Forest Green & Warm Humanism Atmosphere)
    ========================================================================== */
 .login-shell {
   min-height: 100vh;
@@ -377,13 +377,13 @@ strong, b {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-deep);
-  /* Continuous full-page gradient covering entire page without split */
+  background-color: #122817;
+  /* Deep Forest & Hunter Green Atmosphere */
   background: linear-gradient(
     135deg,
-    var(--bg-deep) 0%,
-    var(--bg-navy) 45%,
-    var(--cobalt) 100%
+    #122817 0%,
+    #1A4024 45%,
+    #1E4D2B 100%
   );
   overflow-x: clip;
   isolation: isolate;
@@ -398,7 +398,7 @@ strong, b {
   z-index: 0;
 }
 
-/* Glow A: behind the sign-in card (top-right, --cobalt-lit, ~35% opacity, blur >= 120px) */
+/* Glow A: behind the sign-in card (top-right, Forest Sage Glow) */
 .login-glow--top-right,
 .login-blob--top-right {
   position: absolute;
@@ -407,12 +407,12 @@ strong, b {
   width: clamp(520px, 45vw, 750px);
   height: clamp(520px, 45vw, 750px);
   border-radius: 50%;
-  background: var(--cobalt-lit);
+  background: #2D6A3E;
   filter: blur(140px);
   opacity: 0.35;
 }
 
-/* Glow B: bottom-left (--cobalt, ~40% opacity, blur >= 120px, naturally integrated) */
+/* Glow B: bottom-left (Deep Moss Glow) */
 .login-glow--bottom-left,
 .login-blob--bottom-right {
   position: absolute;
@@ -421,7 +421,7 @@ strong, b {
   width: clamp(500px, 42vw, 700px);
   height: clamp(500px, 42vw, 700px);
   border-radius: 50%;
-  background: var(--cobalt);
+  background: #163A20;
   filter: blur(140px);
   opacity: 0.40;
 }
@@ -495,11 +495,11 @@ strong, b {
   height: 3rem;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(122, 162, 255, 0.3);
+  border: 1px solid rgba(184, 214, 191, 0.4);
   border-radius: var(--radius-lg);
-  background-color: rgba(10, 26, 92, 0.75);
-  color: var(--cobalt-text);
-  box-shadow: var(--shadow-logo-glow);
+  background-color: rgba(22, 58, 32, 0.85);
+  color: #EAF2EC;
+  box-shadow: 0 4px 16px rgba(30, 77, 43, 0.35);
 }
 
 .login-brand-name {
@@ -511,7 +511,7 @@ strong, b {
 }
 
 .login-brand-meta {
-  color: var(--ink-on-dark);
+  color: #B8D6BF;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -533,7 +533,7 @@ strong, b {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--ink-muted);
+  color: #D4E4D8;
   box-shadow: 0 2px 8px rgba(4, 10, 34, 0.4);
 }
 
@@ -541,8 +541,8 @@ strong, b {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--color-status-approved);
-  box-shadow: 0 0 6px var(--color-status-approved);
+  background-color: #4ADE80;
+  box-shadow: 0 0 6px #4ADE80;
 }
 
 .login-copy {
@@ -551,8 +551,8 @@ strong, b {
 
 .login-kicker {
   display: inline-block;
-  color: var(--cobalt-text);
-  font-family: var(--font-mono);
+  color: #B8D6BF;
+  font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
@@ -719,8 +719,8 @@ strong, b {
   align-items: center;
   gap: var(--space-3xs);
   padding: 3px 8px;
-  background-color: rgba(0, 71, 171, 0.08);
-  color: var(--cobalt);
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
   border-radius: var(--radius-sm);
   font-size: 0.72rem;
   font-weight: 700;
@@ -733,13 +733,13 @@ strong, b {
   font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--bg-deep);
+  color: var(--color-ink);
   margin-bottom: var(--space-3xs);
 }
 
 .login-panel-head p {
   font-size: var(--text-sm);
-  color: #475569;
+  color: var(--color-muted);
   line-height: var(--lh-snug);
 }
 
@@ -747,7 +747,7 @@ strong, b {
 .login-role-strip {
   margin-bottom: var(--space-xl);
   padding-bottom: var(--space-md);
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--color-rule);
 }
 
 .login-role-strip-header {
@@ -762,12 +762,12 @@ strong, b {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #475569;
+  color: var(--color-muted);
 }
 
 .login-role-strip-hint {
   font-size: 0.7rem;
-  color: #334B77;
+  color: var(--color-accent);
   font-weight: 500;
 }
 
@@ -782,8 +782,8 @@ strong, b {
   flex-direction: column;
   padding: var(--space-sm) var(--space-xs);
   min-height: 5.75rem;
-  background-color: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-rule);
   border-radius: var(--radius-md);
   text-align: left;
   cursor: pointer;
@@ -794,18 +794,18 @@ strong, b {
 
 .login-role-card:hover {
   background-color: #FFFFFF;
-  border-color: var(--cobalt);
+  border-color: var(--color-accent);
   transform: translateY(-1px);
 }
 
 .login-role-card:focus-visible {
-  outline: 2px solid var(--cobalt-lit);
+  outline: 2px solid var(--color-focus);
 }
 
 .login-role-card.is-selected {
-  background-color: rgba(0, 71, 171, 0.06);
-  border-color: var(--cobalt);
-  box-shadow: 0 0 0 1px var(--cobalt);
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }
 
 .login-role-card-top {
@@ -820,16 +820,16 @@ strong, b {
   height: 1.6rem;
   border-radius: var(--radius-sm);
   background-color: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-rule);
   display: grid;
   place-items: center;
-  color: var(--cobalt);
+  color: var(--color-accent);
 }
 
 .login-role-card.is-selected .login-role-card-icon {
-  background-color: var(--cobalt);
+  background-color: var(--color-accent);
   color: #FFFFFF;
-  border-color: var(--cobalt);
+  border-color: var(--color-accent);
 }
 
 .login-role-tier {
@@ -837,23 +837,23 @@ strong, b {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #64748B;
+  color: var(--color-muted-2);
 }
 
 .login-role-card.is-selected .login-role-tier {
-  color: var(--cobalt);
+  color: var(--color-accent);
 }
 
 .login-role-card-name {
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--bg-deep);
+  color: var(--color-ink);
   line-height: 1.2;
 }
 
 .login-role-card-detail {
   font-size: 0.7rem;
-  color: #475569;
+  color: var(--color-muted);
   line-height: 1.35;
   margin-top: 4px;
   white-space: normal;
@@ -949,14 +949,15 @@ strong, b {
   font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: -0.01em;
-  background-color: var(--cobalt);
+  background-color: var(--color-accent);
   color: #FFFFFF;
-  box-shadow: 0 4px 18px -2px rgba(0, 71, 171, 0.45);
+  border: none;
+  box-shadow: 0 4px 18px -2px rgba(30, 77, 43, 0.45);
 }
 
 .login-submit:hover:not(:disabled) {
-  background-color: var(--bg-navy);
-  box-shadow: 0 6px 22px -2px rgba(10, 26, 92, 0.55);
+  background-color: var(--color-accent-hover);
+  box-shadow: 0 6px 22px -2px rgba(22, 58, 32, 0.55);
 }
 
 .login-panel-footer {
@@ -1023,8 +1024,8 @@ strong, b {
 
 .sidebar {
   width: 260px;
-  background-color: var(--bg-sidebar);
-  color: #FFFFFF;
+  background-color: #F7F4EE;
+  color: var(--color-ink);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -1032,7 +1033,7 @@ strong, b {
   bottom: 0;
   left: 0;
   z-index: 40;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid var(--color-rule);
   transition: var(--transition-surface);
 }
 
@@ -1041,34 +1042,37 @@ strong, b {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--color-rule);
 }
 
 .sidebar-logo-icon {
   width: 2.25rem;
   height: 2.25rem;
-  background-color: var(--cobalt);
+  background-color: var(--color-accent);
   border-radius: var(--radius-md);
   display: grid;
   place-items: center;
   color: #FFFFFF;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--text-md);
-  box-shadow: 0 2px 8px rgba(0, 71, 171, 0.4);
+  font-size: 1.15rem;
+  box-shadow: 0 2px 8px rgba(30, 77, 43, 0.25);
 }
 
 .sidebar-title {
-  font-size: var(--text-md);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #FFFFFF;
+  color: var(--color-ink);
 }
 
 .sidebar-subtitle {
   font-size: 0.72rem;
-  color: #94A3B8;
+  color: var(--color-muted-2);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  font-weight: 600;
 }
 
 .sidebar-nav {
@@ -1077,6 +1081,7 @@ strong, b {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
+  overflow-y: auto;
 }
 
 .nav-item {
@@ -1084,31 +1089,31 @@ strong, b {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
-  color: #94A3B8;
+  color: var(--color-muted);
   border-radius: var(--radius-md);
   font-weight: 500;
   font-size: var(--text-sm);
-  line-height: 1; /* Gate 36 */
-  white-space: nowrap; /* Gate 49 */
-  transition: var(--transition-surface);
+  line-height: 1;
+  white-space: nowrap;
+  transition: var(--transition-fast);
 }
 
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.07);
-  color: #FFFFFF;
+  background-color: var(--color-paper-2);
+  color: var(--color-ink);
 }
 
 .nav-item.active {
-  background-color: rgba(37, 99, 235, 0.22);
-  color: #FFFFFF;
-  border-left: 3px solid var(--cobalt-lit);
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+  border-left: 3px solid var(--color-accent);
   font-weight: 600;
 }
 
 .sidebar-footer {
   padding: var(--space-sm);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background-color: rgba(0, 0, 0, 0.25);
+  border-top: 1px solid var(--color-rule);
+  background-color: rgba(247, 244, 238, 0.9);
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -1119,17 +1124,19 @@ strong, b {
   align-items: center;
   gap: var(--space-2xs);
   padding: var(--space-2xs) var(--space-xs);
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-rule);
   border-radius: var(--radius-md);
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.03);
 }
 
 .sidebar-user-avatar {
   width: 2rem;
   height: 2rem;
   border-radius: var(--radius-full);
-  background-color: var(--cobalt);
-  color: #FFFFFF;
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+  border: 1px solid var(--color-status-approved-rule);
   display: grid;
   place-items: center;
   font-weight: 700;
@@ -1146,7 +1153,7 @@ strong, b {
 .sidebar-user-name {
   font-size: var(--text-xs);
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--color-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1154,11 +1161,12 @@ strong, b {
 
 .sidebar-user-role {
   font-size: 0.7rem;
-  color: var(--cobalt-text);
+  color: var(--color-accent);
   text-transform: capitalize;
   display: flex;
   align-items: center;
   gap: 4px;
+  font-weight: 600;
 }
 
 .sidebar-logout-btn {
@@ -1168,20 +1176,20 @@ strong, b {
   gap: var(--space-2xs);
   width: 100%;
   padding: var(--space-2xs) var(--space-sm);
-  background-color: rgba(239, 68, 68, 0.12);
-  color: #FCA5A5;
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background-color: var(--color-surface);
+  color: var(--color-muted);
+  border: 1px solid var(--color-rule);
   border-radius: var(--radius-md);
   font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-button);
+  transition: var(--transition-fast);
 }
 
 .sidebar-logout-btn:hover {
-  background-color: #DC2626;
-  color: #FFFFFF;
-  border-color: #DC2626;
+  background-color: #FEF2F2;
+  color: #991B1B;
+  border-color: #FECACA;
 }
 
 .main-content {
@@ -1196,7 +1204,7 @@ strong, b {
 
 .top-navbar {
   height: 4.25rem;
-  background-color: var(--color-surface-raised);
+  background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-rule);
   display: flex;
   align-items: center;

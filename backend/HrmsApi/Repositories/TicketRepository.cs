@@ -79,6 +79,7 @@ public class TicketRepository : ITicketRepository
             INNER JOIN Users u ON e.UserID = u.UserID
             WHERE tc.TicketID = @TicketID
             """ + (includeInternal ? "" : " AND tc.IsInternal = 0") + """
+
             ORDER BY tc.CreatedAt ASC;
             """;
         return await connection.QueryAsync<TicketCommentDto>(sql, new { TicketID = ticketId });

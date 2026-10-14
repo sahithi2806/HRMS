@@ -148,7 +148,7 @@ export const DocumentsPage = () => {
   const complianceCount = documents.filter((d) => d.category?.toLowerCase().includes('compliance')).length;
 
   return (
-    <div className="page-body">
+    <div className="page-body" style={{ maxWidth: '1280px', margin: '0 auto', padding: '8px 4px 40px 4px' }}>
       {/* Toast */}
       {toastMessage && (
         <div
@@ -156,11 +156,11 @@ export const DocumentsPage = () => {
             position: 'fixed',
             top: '24px',
             right: '24px',
-            backgroundColor: '#065f46',
-            color: '#ffffff',
+            backgroundColor: '#1E4D2B',
+            color: '#FFFFFF',
             padding: '12px 20px',
-            borderRadius: '10px',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: '0 10px 25px -3px rgba(28, 25, 23, 0.2)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
@@ -175,12 +175,12 @@ export const DocumentsPage = () => {
       )}
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.95rem', fontWeight: 600, color: 'var(--color-ink)', letterSpacing: '-0.025em', margin: '0 0 4px 0' }}>
             Company Documents & Policies
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
+          <p style={{ color: 'var(--color-ink-muted)', fontSize: '0.9rem', margin: 0 }}>
             Official handbooks, compliance guidelines, templates, and corporate notices
           </p>
         </div>
@@ -189,7 +189,7 @@ export const DocumentsPage = () => {
           <button
             onClick={() => setIsUploadOpen(true)}
             className="btn btn-primary"
-            style={{ padding: '10px 20px' }}
+            style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <Upload size={18} />
             <span>Upload Document</span>
@@ -198,37 +198,38 @@ export const DocumentsPage = () => {
       </div>
 
       {/* Category Stats Grid */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#eef2ff', color: '#4f46e5' }}>
+      <div className="stats-grid" style={{ marginBottom: '24px' }}>
+        <div className="stat-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-rule)', borderRadius: 'var(--radius-md)' }}>
+          <div className="stat-icon" style={{ backgroundColor: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}>
             <FileText size={22} />
           </div>
           <div>
-            <div className="stat-value">{documents.length}</div>
+            <div className="stat-value" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>{documents.length}</div>
             <div className="stat-label">Total Published Documents</div>
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#ecfdf5', color: '#059669' }}>
+        <div className="stat-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-rule)', borderRadius: 'var(--radius-md)' }}>
+          <div className="stat-icon" style={{ backgroundColor: '#EAF5EE', color: 'var(--color-accent)' }}>
             <FileCheck size={22} />
           </div>
           <div>
-            <div className="stat-value">{policyCount || documents.length}</div>
+            <div className="stat-value" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-accent)' }}>{policyCount || documents.length}</div>
             <div className="stat-label">HR Policies & Handbooks</div>
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#fef3c7', color: '#d97706' }}>
-            <Download size={22} />
+        <div className="stat-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-rule)', borderRadius: 'var(--radius-md)' }}>
+          <div className="stat-icon" style={{ backgroundColor: '#FAF6EE', color: 'var(--color-ink)' }}>
+            <FileText size={22} />
           </div>
           <div>
-            <div className="stat-value">{complianceCount || 2}</div>
-            <div className="stat-label">Statutory Compliance Files</div>
+            <div className="stat-value" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>{complianceCount || 0}</div>
+            <div className="stat-label">Compliance & Legal Notices</div>
           </div>
         </div>
       </div>
+
 
       {/* Search & Category Filter Bar */}
       <div className="card" style={{ marginBottom: '24px', padding: '16px 20px' }}>

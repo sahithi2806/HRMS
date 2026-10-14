@@ -74,10 +74,16 @@ export const MyAssetsPage = () => {
       return;
     }
 
+    const assetId = selectedAsset?.assetID ?? selectedAsset?.assetId ?? selectedAsset?.AssetID;
+    if (!assetId) {
+      showToast('error', 'No asset selected.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       await assetService.createRequest({
-        assetId: selectedAsset.AssetID,
+        assetID: assetId,
         requestType,
         description: description.trim()
       });
@@ -93,6 +99,7 @@ export const MyAssetsPage = () => {
   };
 
   const handleCancelRequest = async (requestId) => {
+    if (!requestId) return;
     if (!window.confirm('Are you sure you want to cancel this pending request?')) return;
     try {
       await assetService.cancelRequest(requestId);
@@ -132,12 +139,13 @@ export const MyAssetsPage = () => {
 
       {/* Header Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A1A5C 0%, #0047AB 60%, #2563EB 100%)',
-        borderRadius: '16px',
+        background: 'linear-gradient(135deg, #FAF6EE 0%, #F4ECE1 100%)',
+        borderRadius: 'var(--radius-lg)',
         padding: '30px 36px',
-        color: '#FFFFFF',
+        color: 'var(--color-ink)',
         marginBottom: '28px',
-        boxShadow: '0 12px 30px -10px rgba(0, 71, 171, 0.35)',
+        border: '1px solid var(--color-rule)',
+        boxShadow: 'var(--shadow-warm-sm)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -146,31 +154,44 @@ export const MyAssetsPage = () => {
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <Sparkles size={16} style={{ color: '#38BDF8' }} />
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#93C5FD' }}>
-              Hardware & Devices
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '999px',
+              background: 'var(--color-accent-soft)',
+              color: 'var(--color-accent)',
+              fontSize: '0.76rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase'
+            }}>
+              <Sparkles size={13} />
+              Hardware & Assigned Devices
             </span>
           </div>
-          <h1 style={{ fontSize: '1.85rem', fontWeight: 700, margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
-            My Assigned Assets
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.95rem', fontWeight: 600, margin: '0 0 6px 0', color: 'var(--color-ink)', letterSpacing: '-0.025em' }}>
+            My Assigned Equipment
           </h1>
-          <p style={{ margin: 0, opacity: 0.85, fontSize: '0.95rem' }}>
-            View hardware assigned to you, report maintenance issues, or schedule equipment returns.
+          <p style={{ margin: 0, color: 'var(--color-ink-muted)', fontSize: '0.94rem' }}>
+            View hardware assigned to you, report maintenance requests, or schedule equipment returns.
           </p>
         </div>
 
         <div style={{
-          background: 'rgba(255, 255, 255, 0.12)',
+          background: 'rgba(255, 255, 255, 0.85)',
           backdropFilter: 'blur(8px)',
-          padding: '12px 20px',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          textAlign: 'center'
+          padding: '14px 24px',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--color-rule)',
+          textAlign: 'center',
+          boxShadow: 'var(--shadow-warm-sm)'
         }}>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>
+          <div style={{ fontSize: '1.85rem', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-accent)', fontVariantNumeric: 'tabular-nums' }}>
             {myAssets.length}
           </div>
-          <div style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.85 }}>
+          <div style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, color: 'var(--color-ink-muted)' }}>
             Active Hardware
           </div>
         </div>
@@ -178,27 +199,27 @@ export const MyAssetsPage = () => {
 
       {/* Main Grid: My Assigned Devices */}
       <div style={{ marginBottom: '36px' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <ShieldCheck size={22} style={{ color: '#0047AB' }} />
+        <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-display)', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <ShieldCheck size={22} style={{ color: 'var(--color-accent)' }} />
           Assigned Equipment ({myAssets.length})
         </h2>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: '#64748B' }}>
-            <Clock className="animate-spin" size={32} style={{ margin: '0 auto 12px auto', color: '#0047AB' }} />
+          <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--color-ink-muted)' }}>
+            <Clock className="animate-spin" size={32} style={{ margin: '0 auto 12px auto', color: 'var(--color-accent)' }} />
             <p>Loading your assigned equipment...</p>
           </div>
         ) : myAssets.length === 0 ? (
           <div style={{
-            background: '#FFFFFF',
-            borderRadius: '16px',
-            border: '1px dashed #CBD5E1',
+            background: 'var(--color-surface)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px dashed var(--color-rule)',
             padding: '48px 24px',
             textAlign: 'center',
-            color: '#64748B'
+            color: 'var(--color-ink-muted)'
           }}>
-            <Box size={44} style={{ margin: '0 auto 14px auto', color: '#94A3B8' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#334155', margin: '0 0 6px 0' }}>No assets currently assigned</h3>
+            <Box size={44} style={{ margin: '0 auto 14px auto', color: '#8C827A' }} />
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-ink)', margin: '0 0 6px 0' }}>No assets currently assigned</h3>
             <p style={{ margin: 0, fontSize: '0.9rem' }}>
               You do not have any company hardware assigned to your account right now.
             </p>
@@ -206,15 +227,30 @@ export const MyAssetsPage = () => {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
             {myAssets.map((asset) => {
-              const Icon = CATEGORY_ICONS[asset.Category] || Box;
+              const assetId = asset.assetID ?? asset.assetId ?? asset.AssetID;
+              const assetTag = asset.assetTag || asset.AssetTag;
+              const name = asset.name || asset.Name;
+              const category = asset.category || asset.Category;
+              const serialNumber = asset.serialNumber || asset.SerialNumber;
+              const assignedAt = asset.assignedAt || asset.AssignedAt;
+              const status = asset.status || asset.Status;
+              const Icon = CATEGORY_ICONS[category] || Box;
+
+              // Check if there is an active pending request on this asset
+              const pendingReq = requests.find(r => 
+                (r.assetID ?? r.assetId ?? r.AssetID) === assetId && 
+                (r.status ?? r.Status) === 'Pending'
+              );
+              const isUnderRepair = status === 'UnderRepair';
+
               return (
                 <div
-                  key={asset.AssetID}
+                  key={assetId}
                   style={{
-                    background: '#FFFFFF',
-                    borderRadius: '16px',
-                    border: '1px solid #E2E8F0',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                    background: 'var(--color-surface)',
+                    borderRadius: 'var(--radius-md)',
+                    border: pendingReq ? '1px solid #FCD34D' : (isUnderRepair ? '1px solid #FED7AA' : '1px solid var(--color-rule)'),
+                    boxShadow: 'var(--shadow-warm-sm)',
                     padding: '24px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -228,88 +264,148 @@ export const MyAssetsPage = () => {
                         width: '46px',
                         height: '46px',
                         borderRadius: '12px',
-                        background: '#EFF6FF',
-                        color: '#0047AB',
+                        background: 'var(--color-accent-soft)',
+                        color: 'var(--color-accent)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}>
                         <Icon size={24} />
                       </div>
-                      <span style={{
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        background: '#F1F5F9',
-                        color: '#334155',
-                        border: '1px solid #E2E8F0'
-                      }}>
-                        {asset.AssetTag}
-                      </span>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        {isUnderRepair && (
+                          <span style={{
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                            background: '#FFF7ED',
+                            color: '#C2410C',
+                            border: '1px solid #FFEDD5'
+                          }}>
+                            In Repair
+                          </span>
+                        )}
+                        {pendingReq && (
+                          <span style={{
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                            background: '#FEF3C7',
+                            color: '#B45309',
+                            border: '1px solid #FDE68A'
+                          }}>
+                            Pending {pendingReq.requestType || pendingReq.RequestType}
+                          </span>
+                        )}
+                        <span style={{
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          background: '#F1F5F9',
+                          color: '#334155',
+                          border: '1px solid #E2E8F0'
+                        }}>
+                          {assetTag}
+                        </span>
+                      </div>
                     </div>
 
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 4px 0', color: '#0F172A' }}>
-                      {asset.Name}
+                      {name}
                     </h3>
                     <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '14px' }}>
-                      Category: <strong>{asset.Category}</strong>
+                      Category: <strong>{category}</strong>
                     </div>
 
                     <div style={{ fontSize: '0.82rem', color: '#475569', background: '#F8FAFC', padding: '10px 14px', borderRadius: '8px', marginBottom: '18px' }}>
                       <div style={{ marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
                         <span>Serial Number:</span>
-                        <strong style={{ fontFamily: 'monospace' }}>{asset.SerialNumber || 'N/A'}</strong>
+                        <strong style={{ fontFamily: 'monospace' }}>{serialNumber || 'N/A'}</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>Assigned On:</span>
-                        <strong>{asset.AssignedAt ? new Date(asset.AssignedAt).toLocaleDateString() : 'N/A'}</strong>
+                        <strong>{assignedAt ? new Date(assignedAt).toLocaleDateString() : 'N/A'}</strong>
                       </div>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '10px', paddingTop: '12px', borderTop: '1px solid #F1F5F9' }}>
-                    <button
-                      onClick={() => openRequestModal(asset, 'Repair')}
-                      style={{
+                    {pendingReq ? (
+                      <div style={{
                         flex: 1,
                         padding: '9px 12px',
                         borderRadius: '8px',
+                        background: '#FEF3C7',
                         border: '1px solid #FDE68A',
-                        background: '#FFFBEB',
-                        color: '#B45309',
-                        fontWeight: 600,
+                        color: '#92400E',
                         fontSize: '0.82rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <Wrench size={15} /> Raise Repair
-                    </button>
-                    <button
-                      onClick={() => openRequestModal(asset, 'Return')}
-                      style={{
+                        fontWeight: 600,
+                        textAlign: 'center'
+                      }}>
+                        {pendingReq.requestType || pendingReq.RequestType} Request Under Review
+                      </div>
+                    ) : isUnderRepair ? (
+                      <div style={{
                         flex: 1,
                         padding: '9px 12px',
                         borderRadius: '8px',
-                        border: '1px solid #CBD5E1',
-                        background: '#F8FAFC',
-                        color: '#475569',
-                        fontWeight: 600,
+                        background: '#FFF7ED',
+                        border: '1px solid #FED7AA',
+                        color: '#9A3412',
                         fontSize: '0.82rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <RotateCcw size={15} /> Return Asset
-                    </button>
+                        fontWeight: 600,
+                        textAlign: 'center'
+                      }}>
+                        Asset currently under repair
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => openRequestModal(asset, 'Repair')}
+                          style={{
+                            flex: 1,
+                            padding: '9px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #FDE68A',
+                            background: '#FFFBEB',
+                            color: '#B45309',
+                            fontWeight: 600,
+                            fontSize: '0.82rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Wrench size={15} /> Raise Repair
+                        </button>
+                        <button
+                          onClick={() => openRequestModal(asset, 'Return')}
+                          style={{
+                            flex: 1,
+                            padding: '9px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #CBD5E1',
+                            background: '#F8FAFC',
+                            color: '#475569',
+                            fontWeight: 600,
+                            fontSize: '0.82rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <RotateCcw size={15} /> Return Asset
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               );
@@ -327,8 +423,8 @@ export const MyAssetsPage = () => {
         boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
-          <History size={22} style={{ color: '#0047AB' }} />
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, color: '#0F172A' }}>
+          <History size={22} style={{ color: 'var(--color-accent)' }} />
+          <h2 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-display)', fontWeight: 600, margin: 0, color: 'var(--color-ink)' }}>
             My Asset Requests History
           </h2>
         </div>
@@ -353,13 +449,23 @@ export const MyAssetsPage = () => {
               </thead>
               <tbody>
                 {requests.map((req) => {
-                  const badge = REQUEST_STATUS_BADGES[req.Status] || REQUEST_STATUS_BADGES.Pending;
+                  const reqId = req.assetRequestID ?? req.assetRequestId ?? req.AssetRequestID;
+                  const assetName = req.assetName || req.AssetName;
+                  const assetTag = req.assetTag || req.AssetTag;
+                  const reqType = req.requestType || req.RequestType;
+                  const status = req.status || req.Status;
+                  const desc = req.description || req.Description;
+                  const adminComment = req.adminComment || req.AdminComment;
+                  const createdAt = req.createdAt || req.CreatedAt;
+                  const badge = REQUEST_STATUS_BADGES[status] || REQUEST_STATUS_BADGES.Pending;
+                  const isPending = status === 'Pending';
+
                   return (
-                    <tr key={req.AssetRequestID} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                    <tr key={reqId} style={{ borderBottom: '1px solid #F1F5F9' }}>
                       <td style={{ padding: '14px 16px', fontWeight: 600, color: '#0F172A' }}>
-                        <div>{req.AssetName}</div>
+                        <div>{assetName}</div>
                         <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#64748B' }}>
-                          {req.AssetTag}
+                          {assetTag}
                         </span>
                       </td>
                       <td style={{ padding: '14px 16px' }}>
@@ -368,10 +474,10 @@ export const MyAssetsPage = () => {
                           alignItems: 'center',
                           gap: '5px',
                           fontWeight: 600,
-                          color: req.RequestType === 'Repair' ? '#B45309' : '#0369A1'
+                          color: reqType === 'Repair' ? '#B45309' : '#0369A1'
                         }}>
-                          {req.RequestType === 'Repair' ? <Wrench size={14} /> : <RotateCcw size={14} />}
-                          {req.RequestType}
+                          {reqType === 'Repair' ? <Wrench size={14} /> : <RotateCcw size={14} />}
+                          {reqType}
                         </span>
                       </td>
                       <td style={{ padding: '14px 16px' }}>
@@ -384,26 +490,26 @@ export const MyAssetsPage = () => {
                           color: badge.text,
                           border: `1px solid ${badge.border}`
                         }}>
-                          {req.Status}
+                          {status}
                         </span>
                       </td>
                       <td style={{ padding: '14px 16px', color: '#334155', maxWidth: '280px' }}>
-                        {req.Description}
+                        {desc}
                       </td>
                       <td style={{ padding: '14px 16px', color: '#64748B', maxWidth: '220px' }}>
-                        {req.AdminComment ? (
-                          <span style={{ fontStyle: 'italic' }}>&ldquo;{req.AdminComment}&rdquo;</span>
+                        {adminComment ? (
+                          <span style={{ fontStyle: 'italic' }}>&ldquo;{adminComment}&rdquo;</span>
                         ) : (
                           <span style={{ color: '#94A3B8' }}>&mdash;</span>
                         )}
                       </td>
                       <td style={{ padding: '14px 16px', color: '#64748B' }}>
-                        {new Date(req.CreatedAt).toLocaleDateString()}
+                        {createdAt ? new Date(createdAt).toLocaleDateString() : 'N/A'}
                       </td>
                       <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                        {req.Status === 'Pending' && (
+                        {isPending && (
                           <button
-                            onClick={() => handleCancelRequest(req.AssetRequestID)}
+                            onClick={() => handleCancelRequest(reqId)}
                             style={{
                               padding: '5px 10px',
                               borderRadius: '6px',
@@ -464,7 +570,7 @@ export const MyAssetsPage = () => {
             <div style={{ background: '#F8FAFC', padding: '12px 16px', borderRadius: '10px', marginBottom: '18px', border: '1px solid #E2E8F0' }}>
               <div style={{ fontSize: '0.85rem', color: '#64748B' }}>Device:</div>
               <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '1rem' }}>
-                {selectedAsset?.Name} ({selectedAsset?.AssetTag})
+                {selectedAsset?.name || selectedAsset?.Name} ({selectedAsset?.assetTag || selectedAsset?.AssetTag})
               </div>
             </div>
 
@@ -514,7 +620,7 @@ export const MyAssetsPage = () => {
                     padding: '9px 20px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: requestType === 'Repair' ? '#D97706' : '#0047AB',
+                    background: requestType === 'Repair' ? '#B45309' : 'var(--color-accent)',
                     color: '#FFFFFF',
                     fontWeight: 600,
                     cursor: submitting ? 'not-allowed' : 'pointer'

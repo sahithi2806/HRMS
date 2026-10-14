@@ -3,7 +3,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
   Users, UserPlus, Search, Edit2, CheckCircle, 
-  XCircle, X 
+  XCircle, X, Shield, Briefcase
 } from 'lucide-react';
 
 export const EmployeesPage = () => {
@@ -98,7 +98,7 @@ export const EmployeesPage = () => {
 
       await api.post('/employees', payload);
       setIsAddOpen(false);
-      showToast('Employee created successfully!');
+      showToast('Employee onboarded successfully!');
       setFormData({
         name: '',
         email: '',
@@ -148,7 +148,7 @@ export const EmployeesPage = () => {
 
       await api.put(`/employees/${selectedEmployee.employeeID}`, payload);
       setIsEditOpen(false);
-      showToast('Employee updated successfully!');
+      showToast('Employee details updated successfully!');
       fetchEmployees();
     } catch (err) {
       setFormError(err.response?.data?.message || 'Failed to update employee.');
@@ -176,7 +176,7 @@ export const EmployeesPage = () => {
   const inactiveCount = employees.filter((e) => e.status === 'Inactive').length;
 
   return (
-    <div className="page-body">
+    <div className="page-body" style={{ maxWidth: '1280px', margin: '0 auto', padding: '8px 4px 40px 4px' }}>
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -184,11 +184,11 @@ export const EmployeesPage = () => {
             position: 'fixed',
             top: '24px',
             right: '24px',
-            backgroundColor: '#065f46',
-            color: '#ffffff',
+            backgroundColor: '#1E4D2B',
+            color: '#FFFFFF',
             padding: '12px 20px',
-            borderRadius: '10px',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: '0 10px 25px -3px rgba(28, 25, 23, 0.2)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
@@ -203,15 +203,22 @@ export const EmployeesPage = () => {
       )}
 
       {/* Header & Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-            {isManager && !isAdmin ? 'Direct Reports & Team' : 'Employee Directory'}
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.95rem',
+            fontWeight: 600,
+            color: 'var(--color-ink)',
+            letterSpacing: '-0.025em',
+            margin: '0 0 4px 0'
+          }}>
+            {isManager && !isAdmin ? 'Direct Reports & Team Roster' : 'Employee Directory & Roster'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
+          <p style={{ color: 'var(--color-ink-muted)', fontSize: '0.9rem', margin: 0 }}>
             {isManager && !isAdmin
-              ? 'View and manage team reporting lines and profile details'
-              : 'Enterprise organizational staff directory and profile controls'}
+              ? 'View and manage team reporting lines, positions, and active records'
+              : 'Organizational staff ledger, compensation governance, and onboarding controls'}
           </p>
         </div>
 
@@ -219,60 +226,60 @@ export const EmployeesPage = () => {
           <button
             onClick={() => setIsAddOpen(true)}
             className="btn btn-primary"
-            style={{ padding: '10px 20px' }}
+            style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <UserPlus size={18} />
-            <span>Add Employee</span>
+            <span>Onboard Employee</span>
           </button>
         )}
       </div>
 
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#eef2ff', color: '#4f46e5' }}>
+      {/* Swiss Disciplined Stats Grid */}
+      <div className="stats-grid" style={{ marginBottom: '24px' }}>
+        <div className="stat-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-rule)', borderRadius: 'var(--radius-md)' }}>
+          <div className="stat-icon" style={{ backgroundColor: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}>
             <Users size={22} />
           </div>
           <div>
-            <div className="stat-value">{employees.length}</div>
-            <div className="stat-label">Total Listed</div>
+            <div className="stat-value" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>{employees.length}</div>
+            <div className="stat-label">Total Colleagues</div>
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#ecfdf5', color: '#059669' }}>
+        <div className="stat-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-rule)', borderRadius: 'var(--radius-md)' }}>
+          <div className="stat-icon" style={{ backgroundColor: '#EAF5EE', color: 'var(--color-accent)' }}>
             <CheckCircle size={22} />
           </div>
           <div>
-            <div className="stat-value">{activeCount}</div>
+            <div className="stat-value" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-accent)' }}>{activeCount}</div>
             <div className="stat-label">Active Members</div>
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#fef2f2', color: '#dc2626' }}>
+        <div className="stat-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-rule)', borderRadius: 'var(--radius-md)' }}>
+          <div className="stat-icon" style={{ backgroundColor: '#FDF0EE', color: '#A83226' }}>
             <XCircle size={22} />
           </div>
           <div>
-            <div className="stat-value">{inactiveCount}</div>
+            <div className="stat-value" style={{ fontFamily: 'var(--font-display)', color: '#A83226' }}>{inactiveCount}</div>
             <div className="stat-label">Inactive Records</div>
           </div>
         </div>
       </div>
 
       {/* Search & Filters */}
-      <div className="card" style={{ marginBottom: '24px', padding: '16px 20px' }}>
+      <div className="card" style={{ marginBottom: '24px', padding: '18px 22px', background: 'var(--color-surface)', border: '1px solid var(--color-rule)', borderRadius: 'var(--radius-md)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
           <div style={{ flex: '1 1 280px', position: 'relative' }}>
             <Search
               size={18}
-              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}
+              style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-muted)' }}
             />
             <input
               type="text"
               className="form-input"
-              style={{ paddingLeft: '38px' }}
-              placeholder="Search by name, email, or position..."
+              style={{ paddingLeft: '40px', background: 'var(--color-paper)' }}
+              placeholder="Filter by name, email, or job position..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -281,18 +288,20 @@ export const EmployeesPage = () => {
           <div style={{ minWidth: '160px' }}>
             <select
               className="form-select"
+              style={{ background: 'var(--color-paper)' }}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+              <option value="Active">Active Only</option>
+              <option value="Inactive">Inactive Only</option>
             </select>
           </div>
 
           <div style={{ minWidth: '180px' }}>
             <select
               className="form-select"
+              style={{ background: 'var(--color-paper)' }}
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
             >
@@ -307,31 +316,36 @@ export const EmployeesPage = () => {
         </div>
       </div>
 
-      {/* Employees Table */}
-      <div className="table-wrapper">
+      {/* Employees Ledger Table with Swiss Grid Discipline */}
+      <div className="table-wrapper" style={{
+        background: 'var(--color-surface)',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--color-rule)',
+        overflow: 'hidden'
+      }}>
         <table>
           <thead>
             <tr>
-              <th>Employee</th>
+              <th>Colleague</th>
               <th>Department & Role</th>
               <th>Status</th>
-              <th>Manager</th>
+              <th>Reporting Manager</th>
               <th>Joining Date</th>
-              {isAdmin && <th>Salary</th>}
+              {isAdmin && <th>Compensation</th>}
               {isAdmin && <th style={{ textAlign: 'right' }}>Actions</th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={isAdmin ? 7 : 5} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                <td colSpan={isAdmin ? 7 : 5} style={{ textAlign: 'center', padding: '48px', color: 'var(--color-ink-muted)' }}>
                   Loading employee records...
                 </td>
               </tr>
             ) : employees.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 7 : 5} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                  No employees found matching criteria.
+                <td colSpan={isAdmin ? 7 : 5} style={{ textAlign: 'center', padding: '48px', color: 'var(--color-ink-muted)' }}>
+                  No colleagues match the specified search or filter criteria.
                 </td>
               </tr>
             ) : (
@@ -344,28 +358,29 @@ export const EmployeesPage = () => {
                           width: '36px',
                           height: '36px',
                           borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)',
-                          color: '#4338ca',
+                          background: 'var(--color-accent-soft)',
+                          color: 'var(--color-accent)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontWeight: 700,
-                          fontSize: '0.85rem'
+                          fontSize: '0.86rem',
+                          border: '1px solid #B8D6BF'
                         }}
                       >
                         {emp.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{emp.name}</div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{emp.email}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{emp.name}</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)' }}>{emp.email}</div>
                       </div>
                     </div>
                   </td>
 
                   <td>
-                    <div style={{ fontWeight: 500 }}>{emp.position}</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      {emp.department} • <span className="badge badge-employee" style={{ padding: '1px 6px', fontSize: '0.68rem' }}>{emp.role}</span>
+                    <div style={{ fontWeight: 500, color: 'var(--color-ink)' }}>{emp.position}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', marginTop: '2px' }}>
+                      {emp.department} &bull; <span className="badge badge-employee" style={{ padding: '1px 6px', fontSize: '0.68rem' }}>{emp.role}</span>
                     </div>
                   </td>
 
@@ -376,17 +391,21 @@ export const EmployeesPage = () => {
                   </td>
 
                   <td>
-                    <span style={{ color: emp.managerName ? 'var(--text-main)' : 'var(--text-light)', fontStyle: emp.managerName ? 'normal' : 'italic' }}>
+                    <span style={{
+                      color: emp.managerName ? 'var(--color-ink)' : 'var(--color-ink-muted)',
+                      fontStyle: emp.managerName ? 'normal' : 'italic',
+                      fontSize: '0.88rem'
+                    }}>
                       {emp.managerName || 'None (Top Level)'}
                     </span>
                   </td>
 
-                  <td style={{ color: 'var(--text-muted)' }}>
-                    {new Date(emp.joiningDate).toLocaleDateString()}
+                  <td style={{ color: 'var(--color-ink-muted)', fontVariantNumeric: 'tabular-nums', fontSize: '0.88rem' }}>
+                    {new Date(emp.joiningDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                   </td>
 
                   {isAdmin && (
-                    <td style={{ fontWeight: 600 }}>
+                    <td style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'var(--color-ink)' }}>
                       ₹{Number(emp.salary).toLocaleString('en-IN')}
                     </td>
                   )}
@@ -406,7 +425,7 @@ export const EmployeesPage = () => {
                         <button
                           onClick={() => handleStatusToggle(emp)}
                           className={`btn btn-sm ${emp.status === 'Active' ? 'btn-secondary' : 'btn-primary'}`}
-                          title={emp.status === 'Active' ? 'Deactivate' : 'Activate'}
+                          title={emp.status === 'Active' ? 'Deactivate record' : 'Activate record'}
                         >
                           {emp.status === 'Active' ? 'Deactivate' : 'Activate'}
                         </button>
@@ -420,19 +439,29 @@ export const EmployeesPage = () => {
         </table>
       </div>
 
-      {/* Add Employee Modal */}
+      {/* Onboard Employee Modal */}
       {isAddOpen && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ background: 'var(--color-surface)', borderRadius: 'var(--radius-md)' }}>
             <div className="modal-header">
-              <h2 className="modal-title">Onboard New Employee</h2>
+              <h2 className="modal-title" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>
+                Onboard New Colleague
+              </h2>
               <button onClick={() => setIsAddOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={20} color="#64748b" />
+                <X size={20} color="var(--color-ink-muted)" />
               </button>
             </div>
 
             {formError && (
-              <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', marginBottom: '16px', fontSize: '0.85rem' }}>
+              <div style={{
+                padding: '10px 14px',
+                background: '#FDF0EE',
+                border: '1px solid #F2B8B1',
+                borderRadius: 'var(--radius-sm)',
+                color: '#8A2C2C',
+                marginBottom: '16px',
+                fontSize: '0.85rem'
+              }}>
                 {formError}
               </div>
             )}
@@ -460,15 +489,12 @@ export const EmployeesPage = () => {
                     required
                   />
                 </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Initial Password *</label>
                   <input
                     type="password"
                     className="form-input"
-                    placeholder="Min 6 characters"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
@@ -484,18 +510,15 @@ export const EmployeesPage = () => {
                   >
                     <option value="Employee">Employee</option>
                     <option value="Manager">Manager</option>
-                    <option value="Admin">Admin (HR)</option>
+                    <option value="Admin">Admin</option>
                   </select>
                 </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Department *</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. Engineering"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                     required
@@ -503,19 +526,16 @@ export const EmployeesPage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Job Position / Title *</label>
+                  <label className="form-label">Job Position *</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. Frontend Developer"
                     value={formData.position}
                     onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                     required
                   />
                 </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Annual Salary (₹) *</label>
                   <input
@@ -539,9 +559,7 @@ export const EmployeesPage = () => {
                     required
                   />
                 </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Reporting Manager</label>
                   <select
@@ -559,7 +577,7 @@ export const EmployeesPage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Annual Leave Balance</label>
+                  <label className="form-label">Annual Leave Entitlement</label>
                   <input
                     type="number"
                     min="0"
@@ -571,7 +589,7 @@ export const EmployeesPage = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
@@ -584,7 +602,7 @@ export const EmployeesPage = () => {
                   className="btn btn-primary"
                   disabled={submitting}
                 >
-                  {submitting ? 'Creating...' : 'Create Employee Record'}
+                  {submitting ? 'Creating...' : 'Onboard Colleague'}
                 </button>
               </div>
             </form>
@@ -595,16 +613,26 @@ export const EmployeesPage = () => {
       {/* Edit Employee Modal */}
       {isEditOpen && selectedEmployee && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ background: 'var(--color-surface)', borderRadius: 'var(--radius-md)' }}>
             <div className="modal-header">
-              <h2 className="modal-title">Edit Employee: {selectedEmployee.name}</h2>
+              <h2 className="modal-title" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>
+                Edit Colleague Record: {selectedEmployee.name}
+              </h2>
               <button onClick={() => setIsEditOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={20} color="#64748b" />
+                <X size={20} color="var(--color-ink-muted)" />
               </button>
             </div>
 
             {formError && (
-              <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', marginBottom: '16px', fontSize: '0.85rem' }}>
+              <div style={{
+                padding: '10px 14px',
+                background: '#FDF0EE',
+                border: '1px solid #F2B8B1',
+                borderRadius: 'var(--radius-sm)',
+                color: '#8A2C2C',
+                marginBottom: '16px',
+                fontSize: '0.85rem'
+              }}>
                 {formError}
               </div>
             )}
@@ -686,3 +714,5 @@ export const EmployeesPage = () => {
     </div>
   );
 };
+
+export default EmployeesPage;

@@ -177,8 +177,8 @@ export const TicketDetailPage = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <div style={{ textAlign: 'center', color: '#64748B' }}>
-          <Clock className="animate-spin" size={32} style={{ margin: '0 auto 12px auto', color: '#0047AB' }} />
+        <div style={{ textAlign: 'center', color: 'var(--color-ink-muted)' }}>
+          <Clock className="animate-spin" size={32} style={{ margin: '0 auto 12px auto', color: 'var(--color-accent)' }} />
           <p>Loading ticket discussion...</p>
         </div>
       </div>
@@ -189,16 +189,32 @@ export const TicketDetailPage = () => {
     return (
       <div style={{ maxWidth: '800px', margin: '40px auto', textAlign: 'center' }}>
         <h2>Ticket Not Found</h2>
-        <button onClick={() => navigate('/helpdesk')} style={{ padding: '8px 16px', borderRadius: '8px', background: '#0047AB', color: '#FFF' }}>
+        <button onClick={() => navigate('/helpdesk')} style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--color-accent)', color: '#FFF' }}>
           Back to Helpdesk
         </button>
       </div>
     );
   }
 
-  const statusBadge = STATUS_BADGES[ticket.Status] || STATUS_BADGES.Open;
-  const priorityBadge = PRIORITY_BADGES[ticket.Priority] || PRIORITY_BADGES.Medium;
-  const isRaiser = user?.employeeId === ticket.EmployeeID;
+  const ticketId = ticket.ticketID ?? ticket.ticketId ?? ticket.TicketID;
+  const status = ticket.status || ticket.Status;
+  const priority = ticket.priority || ticket.Priority;
+  const category = ticket.category || ticket.Category;
+  const subject = ticket.subject || ticket.Subject;
+  const description = ticket.description || ticket.Description;
+  const empName = ticket.employeeName || ticket.EmployeeName;
+  const dept = ticket.department || ticket.Department;
+  const assignedTo = ticket.assignedTo ?? ticket.AssignedTo;
+  const feedbackRating = ticket.feedbackRating ?? ticket.FeedbackRating;
+  const feedbackCommentVal = ticket.feedbackComment || ticket.FeedbackComment;
+  const createdAt = ticket.createdAt || ticket.CreatedAt;
+  const resolvedAt = ticket.resolvedAt || ticket.ResolvedAt;
+  const comments = ticket.comments || ticket.Comments || [];
+  const empId = ticket.employeeID ?? ticket.employeeId ?? ticket.EmployeeID;
+
+  const statusBadge = STATUS_BADGES[status] || STATUS_BADGES.Open;
+  const priorityBadge = PRIORITY_BADGES[priority] || PRIORITY_BADGES.Medium;
+  const isRaiser = user?.employeeId === empId;
 
   return (
     <div style={{ maxWidth: '1080px', margin: '0 auto', padding: '24px 16px' }}>
@@ -210,16 +226,16 @@ export const TicketDetailPage = () => {
           right: '24px',
           zIndex: 9999,
           padding: '14px 20px',
-          borderRadius: '10px',
+          borderRadius: 'var(--radius-md)',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
-          background: toast.type === 'success' ? '#ECFDF5' : '#FEF2F2',
-          border: `1px solid ${toast.type === 'success' ? '#10B981' : '#EF4444'}`,
-          color: toast.type === 'success' ? '#065F46' : '#991B1B',
-          fontWeight: 500,
-          fontSize: '0.95rem'
+          boxShadow: '0 10px 25px -5px rgba(28,25,23,0.12)',
+          background: toast.type === 'success' ? '#F4F7F4' : '#FDF4F4',
+          border: `1px solid ${toast.type === 'success' ? '#A7C4AF' : '#E8B4B4'}`,
+          color: toast.type === 'success' ? '#1E4D2B' : '#8A2C2C',
+          fontWeight: 600,
+          fontSize: '0.92rem'
         }}>
           {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
           <span>{toast.message}</span>
@@ -232,7 +248,7 @@ export const TicketDetailPage = () => {
         style={{
           background: 'none',
           border: 'none',
-          color: '#0047AB',
+          color: 'var(--color-accent)',
           fontWeight: 600,
           fontSize: '0.88rem',
           display: 'inline-flex',
@@ -258,7 +274,7 @@ export const TicketDetailPage = () => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
               <span style={{ fontSize: '0.9rem', fontFamily: 'monospace', fontWeight: 700, color: '#64748B', background: '#F1F5F9', padding: '2px 8px', borderRadius: '6px' }}>
-                #{ticket.TicketID}
+                #{ticketId}
               </span>
               <span style={{
                 padding: '4px 12px',
@@ -269,7 +285,7 @@ export const TicketDetailPage = () => {
                 color: statusBadge.text,
                 border: `1px solid ${statusBadge.border}`
               }}>
-                {ticket.Status}
+                {status}
               </span>
               <span style={{
                 padding: '4px 12px',
@@ -280,7 +296,7 @@ export const TicketDetailPage = () => {
                 color: priorityBadge.text,
                 border: `1px solid ${priorityBadge.border}`
               }}>
-                {ticket.Priority} Priority
+                {priority} Priority
               </span>
               <span style={{
                 padding: '3px 10px',
@@ -290,22 +306,22 @@ export const TicketDetailPage = () => {
                 background: '#F1F5F9',
                 color: '#334155'
               }}>
-                {ticket.Category}
+                {category}
               </span>
             </div>
 
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 8px 0', color: '#0F172A' }}>
-              {ticket.Subject}
+              {subject}
             </h1>
 
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-              <span>Raised by: <strong>{ticket.EmployeeName}</strong> ({ticket.Department})</span>
+              <span>Raised by: <strong>{empName}</strong> ({dept})</span>
               <span>&bull;</span>
-              <span>Created on: {new Date(ticket.CreatedAt).toLocaleString()}</span>
-              {ticket.ResolvedAt && (
+              <span>Created on: {createdAt ? new Date(createdAt).toLocaleString() : 'N/A'}</span>
+              {resolvedAt && (
                 <>
                   <span>&bull;</span>
-                  <span>Resolved on: {new Date(ticket.ResolvedAt).toLocaleString()}</span>
+                  <span>Resolved on: {new Date(resolvedAt).toLocaleString()}</span>
                 </>
               )}
             </p>
@@ -315,7 +331,7 @@ export const TicketDetailPage = () => {
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             {isAdmin && (
               <>
-                {ticket.Status === 'Open' && (
+                {status === 'Open' && (
                   <button
                     disabled={actionLoading}
                     onClick={() => handleUpdateStatus('InProgress')}
@@ -334,7 +350,7 @@ export const TicketDetailPage = () => {
                   </button>
                 )}
 
-                {ticket.Status === 'InProgress' && (
+                {status === 'InProgress' && (
                   <button
                     disabled={actionLoading}
                     onClick={() => handleUpdateStatus('Resolved')}
@@ -356,7 +372,7 @@ export const TicketDetailPage = () => {
             )}
 
             {/* Employee or Admin Close button */}
-            {ticket.Status === 'Resolved' && (
+            {status === 'Resolved' && (
               <button
                 disabled={actionLoading}
                 onClick={handleCloseTicket}
@@ -379,7 +395,7 @@ export const TicketDetailPage = () => {
             )}
 
             {/* Reopen button */}
-            {(ticket.Status === 'Resolved' || ticket.Status === 'Closed') && (
+            {(status === 'Resolved' || status === 'Closed') && (
               <button
                 disabled={actionLoading}
                 onClick={handleReopenTicket}
@@ -409,7 +425,7 @@ export const TicketDetailPage = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>Assignee:</span>
               <select
-                value={ticket.AssignedTo || ''}
+                value={assignedTo || ''}
                 onChange={(e) => handleAssignTicket(e.target.value)}
                 style={{
                   padding: '6px 10px',
@@ -420,11 +436,16 @@ export const TicketDetailPage = () => {
                 }}
               >
                 <option value="">Unassigned</option>
-                {employees.map((emp) => (
-                  <option key={emp.employeeID} value={emp.employeeID}>
-                    {emp.name} ({emp.department})
-                  </option>
-                ))}
+                {employees.map((emp) => {
+                  const empOptionId = emp.employeeID ?? emp.employeeId ?? emp.EmployeeID;
+                  const empOptionName = emp.name || emp.Name;
+                  const empOptionDept = emp.department || emp.Department;
+                  return (
+                    <option key={empOptionId} value={empOptionId}>
+                      {empOptionName} ({empOptionDept})
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
@@ -432,7 +453,7 @@ export const TicketDetailPage = () => {
       </div>
 
       {/* Rating & Feedback Box */}
-      {(ticket.Status === 'Resolved' || ticket.Status === 'Closed') && (
+      {(status === 'Resolved' || status === 'Closed') && (
         <div style={{
           background: '#FFFDF5',
           borderRadius: '16px',
@@ -441,7 +462,7 @@ export const TicketDetailPage = () => {
           marginBottom: '24px',
           boxShadow: '0 2px 10px rgba(217, 119, 6, 0.05)'
         }}>
-          {ticket.FeedbackRating ? (
+          {feedbackRating ? (
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <div style={{ display: 'flex', gap: '3px' }}>
@@ -449,18 +470,18 @@ export const TicketDetailPage = () => {
                     <Star
                       key={star}
                       size={18}
-                      fill={star <= ticket.FeedbackRating ? '#D97706' : 'none'}
-                      color={star <= ticket.FeedbackRating ? '#D97706' : '#CBD5E1'}
+                      fill={star <= feedbackRating ? '#D97706' : 'none'}
+                      color={star <= feedbackRating ? '#D97706' : '#CBD5E1'}
                     />
                   ))}
                 </div>
                 <span style={{ fontWeight: 700, color: '#92400E', fontSize: '0.95rem' }}>
-                  Resolution Satisfaction Rating ({ticket.FeedbackRating}/5)
+                  Resolution Satisfaction Rating ({feedbackRating}/5)
                 </span>
               </div>
-              {ticket.FeedbackComment && (
+              {feedbackCommentVal && (
                 <p style={{ margin: 0, fontSize: '0.9rem', color: '#78350F', fontStyle: 'italic' }}>
-                  &ldquo;{ticket.FeedbackComment}&rdquo;
+                  &ldquo;{feedbackCommentVal}&rdquo;
                 </p>
               )}
             </div>
@@ -531,102 +552,111 @@ export const TicketDetailPage = () => {
 
       {/* Discussion Timeline */}
       <div style={{ marginBottom: '28px' }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0F172A', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <MessageSquare size={20} style={{ color: '#0047AB' }} />
-          Discussion Thread ({1 + (ticket.Comments?.length || 0)})
+        <h2 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-display)', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <MessageSquare size={20} style={{ color: 'var(--color-accent)' }} />
+          Discussion Thread ({1 + comments.length})
         </h2>
 
         {/* 1. Opening Description by Requester */}
         <div style={{
-          background: '#FFFFFF',
-          borderRadius: '14px',
-          border: '1px solid #E2E8F0',
+          background: 'var(--color-surface)',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--color-rule)',
           padding: '22px 24px',
           marginBottom: '16px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+          boxShadow: 'var(--shadow-warm-sm)'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#EFF6FF', color: '#0047AB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
-                {ticket.EmployeeName?.charAt(0) || 'U'}
+              <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'var(--color-accent-soft)', color: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                {(empName?.charAt(0)) || 'U'}
               </div>
               <div>
-                <span style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.92rem' }}>{ticket.EmployeeName}</span>
+                <span style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.92rem' }}>{empName}</span>
                 <span style={{ fontSize: '0.78rem', color: '#64748B', marginLeft: '8px' }}>Original Issue Description</span>
               </div>
             </div>
-            <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>{new Date(ticket.CreatedAt).toLocaleString()}</span>
+            <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>{createdAt ? new Date(createdAt).toLocaleString() : 'N/A'}</span>
           </div>
           <p style={{ margin: 0, fontSize: '0.92rem', color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-            {ticket.Description}
+            {description}
           </p>
         </div>
 
         {/* 2. Subsequent Comments */}
-        {ticket.Comments?.map((c) => (
-          <div
-            key={c.CommentID}
-            style={{
-              background: c.IsInternal ? '#FFFBEB' : '#FFFFFF',
-              borderRadius: '14px',
-              border: c.IsInternal ? '1px solid #FDE68A' : '1px solid #E2E8F0',
-              padding: '20px 24px',
-              marginBottom: '16px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{
-                  width: '34px',
-                  height: '34px',
-                  borderRadius: '50%',
-                  background: c.IsInternal ? '#FEF3C7' : (c.AuthorRole === 'Admin' ? '#EEF2FF' : '#F1F5F9'),
-                  color: c.IsInternal ? '#B45309' : (c.AuthorRole === 'Admin' ? '#4F46E5' : '#475569'),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '0.85rem'
-                }}>
-                  {c.AuthorName?.charAt(0) || 'U'}
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.92rem' }}>{c.AuthorName}</span>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', background: '#F1F5F9', padding: '1px 6px', borderRadius: '4px' }}>
-                      {c.AuthorRole}
-                    </span>
-                    {c.IsInternal && (
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        background: '#FEF3C7',
-                        color: '#B45309',
-                        padding: '2px 8px',
-                        borderRadius: '6px',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        border: '1px solid #FDE68A'
-                      }}>
-                        <Lock size={11} /> Internal Note &bull; Admins Only
+        {comments.map((c) => {
+          const commentId = c.commentID ?? c.commentId ?? c.CommentID;
+          const isInternal = c.isInternal ?? c.IsInternal;
+          const authorRole = c.authorRole || c.AuthorRole;
+          const authorName = c.authorName || c.AuthorName;
+          const commentCreatedAt = c.createdAt || c.CreatedAt;
+          const body = c.body || c.Body;
+
+          return (
+            <div
+              key={commentId}
+              style={{
+                background: isInternal ? '#FFFBEB' : '#FFFFFF',
+                borderRadius: '14px',
+                border: isInternal ? '1px solid #FDE68A' : '1px solid #E2E8F0',
+                padding: '20px 24px',
+                marginBottom: '16px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    background: isInternal ? '#FEF3C7' : (authorRole === 'Admin' ? '#EEF2FF' : '#F1F5F9'),
+                    color: isInternal ? '#B45309' : (authorRole === 'Admin' ? '#4F46E5' : '#475569'),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.85rem'
+                  }}>
+                    {authorName?.charAt(0) || 'U'}
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.92rem' }}>{authorName}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', background: '#F1F5F9', padding: '1px 6px', borderRadius: '4px' }}>
+                        {authorRole}
                       </span>
-                    )}
+                      {isInternal && (
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: '#FEF3C7',
+                          color: '#B45309',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          border: '1px solid #FDE68A'
+                        }}>
+                          <Lock size={11} /> Internal Note &bull; Admins Only
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
+                <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>{commentCreatedAt ? new Date(commentCreatedAt).toLocaleString() : 'N/A'}</span>
               </div>
-              <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>{new Date(c.CreatedAt).toLocaleString()}</span>
+              <p style={{ margin: 0, fontSize: '0.92rem', color: isInternal ? '#78350F' : '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                {body}
+              </p>
             </div>
-            <p style={{ margin: 0, fontSize: '0.92rem', color: c.IsInternal ? '#78350F' : '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-              {c.Body}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Reply Composer */}
-      {ticket.Status !== 'Closed' && (
+      {status !== 'Closed' && (
         <div style={{
           background: '#FFFFFF',
           borderRadius: '16px',
@@ -679,7 +709,7 @@ export const TicketDetailPage = () => {
                   padding: '10px 22px',
                   borderRadius: '10px',
                   border: 'none',
-                  background: isInternal ? '#D97706' : '#0047AB',
+                  background: isInternal ? '#B45309' : 'var(--color-accent)',
                   color: '#FFFFFF',
                   fontWeight: 600,
                   fontSize: '0.9rem',
